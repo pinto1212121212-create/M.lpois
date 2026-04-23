@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>🎯 תיקון סופי - ישירות ב-GitHub</title>
+<title>🛡️ הוספת CSP לרינת/דניאל</title>
 <style>
 *{box-sizing:border-box}
 body{background:linear-gradient(180deg,#0a0805,#1a0f05);color:#fff;font-family:-apple-system,sans-serif;margin:0;padding:16px;direction:rtl;min-height:100vh}
 .box{max-width:500px;margin:0 auto}
-h1{color:#fbab20;font-size:22px;margin:0 0 6px;text-align:center}
+h1{color:#10b981;font-size:22px;margin:0 0 6px;text-align:center}
 .sub{color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:14px;text-align:center;line-height:1.6}
 .info{background:rgba(16,185,129,0.08);border:1px solid #10b981;border-radius:10px;padding:11px;margin-bottom:14px;font-size:12.5px;color:#6ee7b7;line-height:1.65}
 .info b{color:#a7f3d0}
@@ -24,37 +24,27 @@ h1{color:#fbab20;font-size:22px;margin:0 0 6px;text-align:center}
 .log .warn{color:#fcd34d}
 .log .info{color:#93c5fd}
 .log .big{font-size:14px;font-weight:800;color:#fb923c}
-.progress{display:flex;gap:6px;margin-top:12px}
-.progress-step{flex:1;height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden}
-.progress-step.done{background:#10b981}
-.progress-step.active{background:linear-gradient(90deg,#f97316,#fbab20);animation:pulse 1s ease-in-out infinite}
-@keyframes pulse{50%{opacity:0.5}}
 </style>
 </head>
 <body><div class="box">
 
-<h1>🎯 תיקון סופי</h1>
-<div class="sub">מתקן ישירות את הקבצים ב-GitHub שלך — בלי להוריד כלום</div>
+<h1>🛡️ הוספת CSP</h1>
+<div class="sub">משלים את האבטחה של <code>diary-rinat</code> עם Content Security Policy</div>
 
 <div class="info">
-<b>💡 איך זה עובד:</b><br>
-1. מוריד את <code>index.html</code> מ-<code>therapy-hodaya</code> וגם מ-<code>diary-rinat</code><br>
-2. מתקן: continueUrl קבוע, סיסמה 8+, מסך credentials אחרי reset<br>
-3. מעלה חזרה ב-UTF-8 נקי (בלי שבירת עברית)<br><br>
-<b>✅ הקבצים לעולם לא עוברים דרך Claude</b> — הכל בדפדפן שלך
+<b>💡 מה הכלי עושה:</b><br>
+1. מוריד את <code>index.html</code> מ-<code>diary-rinat</code><br>
+2. מוסיף CSP meta tag (זהה להודיה)<br>
+3. מעלה חזרה ב-UTF-8 נקי<br><br>
+<b>✅ לא פוגע בשום דבר קיים</b> — רק מוסיף שורה אחת
 </div>
 
 <div class="field">
-  <label>🔑 GitHub Token (כבר שמור)</label>
+  <label>🔑 GitHub Token</label>
   <input type="password" id="tok" placeholder="ghp_...">
 </div>
 
-<button class="btn" id="go" onclick="runFix()">🚀 תקן את שני ה-repos</button>
-
-<div class="progress">
-  <div class="progress-step" id="s1"></div>
-  <div class="progress-step" id="s2"></div>
-</div>
+<button class="btn" id="go" onclick="addCSP()">🛡️ הוסף CSP ל-diary-rinat</button>
 
 <div class="log" id="log">ממתין...</div>
 
@@ -62,10 +52,12 @@ h1{color:#fbab20;font-size:22px;margin:0 0 6px;text-align:center}
 
 <script>
 const OWNER = 'pinto1212121212-create';
-const REPOS = [
-  {name: 'therapy-hodaya', url: 'https://pinto1212121212-create.github.io/therapy-hodaya/', label: 'הודיה'},
-  {name: 'diary-rinat', url: 'https://pinto1212121212-create.github.io/diary-rinat/', label: 'רינת/דניאל'}
-];
+const REPO = 'diary-rinat';
+
+const CSP_CONTENT = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.emailjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://diary-daniel-rinat-default-rtdb.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://api.anthropic.com https://api.emailjs.com https://api.github.com https://raw.githubusercontent.com; media-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests";
+
+const CSP_META = '<meta http-equiv="Content-Security-Policy" content="' + CSP_CONTENT + '">';
+const ANCHOR = '<meta http-equiv="Expires" content="0">';
 
 const tok = document.getElementById('tok');
 const logEl = document.getElementById('log');
@@ -82,9 +74,6 @@ function l(msg, cls){
   logEl.scrollTop = logEl.scrollHeight;
 }
 function clearLog(){logEl.innerHTML = '';}
-function step(n, state){
-  document.getElementById('s'+n).className = 'progress-step' + (state ? ' '+state : '');
-}
 
 // UTF-8 safe base64
 function b64encode(str){
@@ -112,268 +101,72 @@ async function gh(token, path, opts){
   return r.json();
 }
 
-// The new doConfirmReset function
-const NEW_FUNC = `async function doConfirmReset(){
-  const pass=document.getElementById('rc-pass').value;
-  const pass2=document.getElementById('rc-pass2').value;
-  if(!pass){_lgMsg('הכנס סיסמה חדשה');return;}
-  if(pass.length<8){_lgMsg('הסיסמה חייבת להיות לפחות 8 תווים');return;}
-  if(!/[a-zA-Z\\u0590-\\u05FF]/.test(pass)){_lgMsg('הסיסמה חייבת להכיל אותיות');return;}
-  if(!/[0-9]/.test(pass)){_lgMsg('הסיסמה חייבת להכיל מספר אחד לפחות');return;}
-  if(pass!==pass2){_lgMsg('הסיסמאות לא תואמות — בדוק שוב');return;}
-  _lgMsg('⏳ שומר סיסמה חדשה...','ok');
-  let resetResult=null;
-  try{
-    resetResult=await auth.confirmPasswordReset(_currentOobCode,pass);
-  }catch(e){
-    const em=(e.message||'');
-    if(em.toLowerCase().includes('expired')||em.toLowerCase().includes('invalid')){
-      _lgMsg('❌ הקישור פג תוקף או כבר נוצל. בקש מייל חדש.');
-    }else{_lgMsg('❌ שמירת הסיסמה נכשלה: '+em);}
-    return;
-  }
-  const email=resetResult&&resetResult.email||'לא ידוע';
-  _lgMsg('⏳ מוודא שהסיסמה עובדת...','ok');
-  let loginWorked=false;
-  try{
-    const r=await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key='+FB_API_KEY,{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({email,password:pass,returnSecureToken:true})
-    });
-    loginWorked=r.ok;
-  }catch(e){}
-  _showCredsScreen(email,pass,loginWorked);
-}
-
-function _showCredsScreen(email,pass,ok){
-  const cont=document.getElementById('reset-fields-wrap');
-  const btn=document.getElementById('rc-btn');
-  const emailEl=document.getElementById('reset-email');
-  if(btn)btn.style.display='none';
-  if(cont)cont.style.display='none';
-  if(emailEl)emailEl.innerHTML=ok?'✅ הסיסמה שונתה בהצלחה!':'⚠️ הסיסמה נשמרה';
-  const msgEl=document.getElementById('login-msg');
-  if(!msgEl)return;
-  const e2=email.replace(/'/g,"\\\\'");
-  const p2=pass.replace(/'/g,"\\\\'");
-  const stat=ok?'<div style="background:rgba(16,185,129,0.12);border:1px solid #10b981;border-radius:10px;padding:10px;color:#6ee7b7;font-size:13px;margin-bottom:12px;text-align:center">🔒 אומת: ההתחברות עובדת</div>':'<div style="background:rgba(251,171,32,0.12);border:1px solid #fbab20;border-radius:10px;padding:10px;color:#fcd34d;font-size:13px;margin-bottom:12px;text-align:center">⚠️ שמור את הפרטים ונסה ידנית</div>';
-  msgEl.innerHTML=stat+
-    '<div style="background:linear-gradient(135deg,rgba(251,171,32,0.15),rgba(245,158,11,0.08));border:2px solid #fbab20;border-radius:14px;padding:16px;margin-bottom:14px">'+
-      '<div style="color:#fcd34d;font-weight:800;font-size:15px;margin-bottom:10px;text-align:center">📝 שמור את הפרטים האלה!</div>'+
-      '<div style="color:rgba(255,255,255,0.75);font-size:12px;text-align:center;margin-bottom:12px">תצטרך את זה בכניסה הבאה</div>'+
-      '<div style="background:rgba(0,0,0,0.35);border-radius:10px;padding:10px;margin-bottom:8px">'+
-        '<div style="color:#93c5fd;font-size:11px;font-weight:700;margin-bottom:4px">📧 כתובת:</div>'+
-        '<div style="color:#fff;font-family:monospace;font-size:14px;word-break:break-all;user-select:all">'+email+'</div>'+
-      '</div>'+
-      '<div style="background:rgba(0,0,0,0.35);border-radius:10px;padding:10px;margin-bottom:12px">'+
-        '<div style="color:#93c5fd;font-size:11px;font-weight:700;margin-bottom:4px">🔑 סיסמה:</div>'+
-        '<div style="color:#fff;font-family:monospace;font-size:14px;word-break:break-all;user-select:all">'+pass+'</div>'+
-      '</div>'+
-      "<button onclick=\\"_copyCreds('"+e2+"','"+p2+"')\\" style=\\"width:100%;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:8px\\">📋 העתק הכל</button>"+
-      "<button onclick=\\"_shareCreds('"+e2+"','"+p2+"')\\" style=\\"width:100%;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit\\">📤 שלח לוואטסאפ</button>"+
-    '</div>'+
-    "<button onclick=\\"_finishReset('"+e2+"','"+p2+"')\\" style=\\"width:100%;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit\\">✅ שמרתי — המשך ליומן</button>";
-}
-
-function _copyCreds(email,pass){
-  const t='כתובת: '+email+'\\nסיסמה: '+pass;
-  if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>alert('✅ הועתק!')).catch(()=>alert(t));
-  else alert(t);
-}
-function _shareCreds(email,pass){
-  const t='פרטי כניסה:\\nכתובת: '+email+'\\nסיסמה: '+pass;
-  window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');
-}
-async function _finishReset(email,pass){
-  try{await auth.signIn(email,pass);}catch(e){}
-  window.history.replaceState({},'',location.pathname);
-  location.reload();
-}`;
-
-function patchContent(content, repoUrl){
-  const changes = [];
-  
-  // 1. Fix continueUrl (if still dynamic)
-  const dynPat = /continueUrl:location\.origin\+location\.pathname/g;
-  if(dynPat.test(content)){
-    content = content.replace(dynPat, "continueUrl:'"+repoUrl+"'");
-    changes.push('continueUrl → קבוע');
-  }
-  // Fix any existing hardcoded URL to match this repo
-  const anyHardcoded = /continueUrl:'https:\/\/pinto1212121212-create\.github\.io\/[^']*\/'/g;
-  const matches = content.match(anyHardcoded);
-  if(matches){
-    for(const m of matches){
-      if(m !== "continueUrl:'"+repoUrl+"'"){
-        content = content.replace(m, "continueUrl:'"+repoUrl+"'");
-        changes.push('continueUrl מעודכן');
-      }
-    }
-  }
-  
-  // 2. Replace doConfirmReset (and any related helpers)
-  // Find "async function doConfirmReset(){" and replace until we find the next top-level function
-  const startRegex = /async function doConfirmReset\(\)\{/;
-  const startMatch = content.match(startRegex);
-  if(startMatch){
-    const startIdx = startMatch.index;
-    // Find end - need to balance braces
-    let depth = 0;
-    let inString = false;
-    let stringChar = null;
-    let inComment = false;
-    let commentType = null;
-    let endIdx = -1;
-    
-    for(let i = startIdx; i < content.length; i++){
-      const c = content[i];
-      const next = content[i+1];
-      
-      // Handle comments
-      if(!inString && !inComment){
-        if(c === '/' && next === '/'){inComment = true; commentType = 'line'; i++; continue;}
-        if(c === '/' && next === '*'){inComment = true; commentType = 'block'; i++; continue;}
-      }
-      if(inComment){
-        if(commentType === 'line' && c === '\n'){inComment = false;}
-        if(commentType === 'block' && c === '*' && next === '/'){inComment = false; i++; continue;}
-        continue;
-      }
-      
-      // Handle strings
-      if(!inString && (c === '"' || c === "'" || c === '`')){
-        inString = true; stringChar = c; continue;
-      }
-      if(inString){
-        if(c === '\\'){i++; continue;}
-        if(c === stringChar){inString = false;}
-        continue;
-      }
-      
-      // Count braces
-      if(c === '{') depth++;
-      else if(c === '}'){
-        depth--;
-        if(depth === 0){endIdx = i+1; break;}
-      }
-    }
-    
-    if(endIdx > 0){
-      // Also consume any existing _showCredsScreen / _copyCreds / _shareCreds / _finishReset functions
-      // that might follow (from v3 patch)
-      let afterEnd = endIdx;
-      // Skip whitespace
-      while(afterEnd < content.length && /\s/.test(content[afterEnd])) afterEnd++;
-      // Check if next is our helper function
-      const helperNames = ['_showCredsScreen', '_copyCreds', '_shareCreds', '_finishReset'];
-      let consumed = true;
-      while(consumed){
-        consumed = false;
-        for(const hn of helperNames){
-          const pat = new RegExp('^(async\\s+)?function\\s+'+hn+'\\s*\\(', '');
-          if(pat.test(content.substring(afterEnd))){
-            // Find end of this function
-            let d = 0, s = false, sc = null, ic = false, ct = null;
-            let funcStart = afterEnd;
-            // Find opening brace
-            while(afterEnd < content.length && content[afterEnd] !== '{') afterEnd++;
-            for(let i = afterEnd; i < content.length; i++){
-              const c = content[i]; const n = content[i+1];
-              if(!s && !ic){
-                if(c === '/' && n === '/'){ic = true; ct = 'line'; i++; continue;}
-                if(c === '/' && n === '*'){ic = true; ct = 'block'; i++; continue;}
-              }
-              if(ic){
-                if(ct === 'line' && c === '\n') ic = false;
-                if(ct === 'block' && c === '*' && n === '/'){ic = false; i++;}
-                continue;
-              }
-              if(!s && (c === '"' || c === "'" || c === '`')){s = true; sc = c; continue;}
-              if(s){
-                if(c === '\\'){i++; continue;}
-                if(c === sc) s = false;
-                continue;
-              }
-              if(c === '{') d++;
-              else if(c === '}'){d--; if(d === 0){afterEnd = i+1; consumed = true; break;}}
-            }
-            // Skip whitespace again
-            while(afterEnd < content.length && /\s/.test(content[afterEnd])) afterEnd++;
-            break;
-          }
-        }
-      }
-      
-      content = content.substring(0, startIdx) + NEW_FUNC + '\n\n' + content.substring(afterEnd);
-      changes.push('doConfirmReset עודכן עם מסך credentials');
-    }
-  }
-  
-  return {content, changes};
-}
-
-async function runFix(){
+async function addCSP(){
   const token = tok.value.trim();
   if(!token){l('❌ הזן token','err'); return;}
   localStorage.setItem('gh_deploy_token', token);
   goBtn.disabled = true;
   clearLog();
-  step(1, ''); step(2, '');
   
   try{
-    for(let i = 0; i < REPOS.length; i++){
-      const r = REPOS[i];
-      step(i+1, 'active');
-      l('\n═══ '+r.label+' ('+r.name+') ═══', 'big');
-      
-      // Download
-      l('📥 מוריד index.html...', 'info');
-      const fileData = await gh(token, `/repos/${OWNER}/${r.name}/contents/index.html`);
-      const original = b64decode(fileData.content);
-      l('   '+(original.length/1024).toFixed(0)+'KB, '+ (original.match(/[\u0590-\u05FF]/g)||[]).length +' תווים בעברית', 'info');
-      
-      // Patch
-      l('🔧 מתקן...', 'info');
-      const {content: patched, changes} = patchContent(original, r.url);
-      if(changes.length === 0){
-        l('   ℹ️ לא נדרש שינוי', 'warn');
-        step(i+1, 'done');
-        continue;
-      }
-      for(const c of changes) l('   ✅ '+c, 'ok');
-      
-      // Verify
-      const hebrew = (patched.match(/[\u0590-\u05FF]/g)||[]).length;
-      if(hebrew < 10000){
-        l('   ❌ בעיה בעברית ('+hebrew+' תווים)! מדלג', 'err');
-        step(i+1, 'done');
-        continue;
-      }
-      
-      // Upload
-      l('📤 מעלה...', 'info');
-      await gh(token, `/repos/${OWNER}/${r.name}/contents/index.html`, {
-        method:'PUT',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          message: 'Fix: continueUrl + password policy + credentials screen',
-          content: b64encode(patched),
-          sha: fileData.sha
-        })
-      });
-      l('✅ '+r.label+' עודכן בהצלחה!', 'ok');
-      step(i+1, 'done');
-    }
+    l('═══ שלב 1: מוריד index.html מ-diary-rinat ═══', 'big');
+    const fileData = await gh(token, `/repos/${OWNER}/${REPO}/contents/index.html`);
+    const original = b64decode(fileData.content);
+    const hebrew = (original.match(/[\u0590-\u05FF]/g)||[]).length;
+    l('📥 הורד: ' + (original.length/1024).toFixed(0) + ' KB, ' + hebrew.toLocaleString() + ' תווים עברית', 'ok');
     
-    l('\n═══ 🎉 הושלם! ═══', 'big');
-    l('\n⏱️ חכה דקה (GitHub Pages)', 'info');
-    l('🧹 נקה cache של Chrome', 'info');
-    l('🌐 פתח: pinto1212121212-create.github.io/therapy-hodaya/', 'ok');
-    l('🔓 "שכחתי סיסמה" → סיסמה חדשה → יראה מסך credentials!', 'ok');
+    l('\n═══ שלב 2: בדיקת מצב נוכחי ═══', 'big');
+    const alreadyHasCSP = original.includes('Content-Security-Policy');
+    if(alreadyHasCSP){
+      l('✅ CSP כבר קיים! אין צורך לתקן', 'ok');
+      goBtn.textContent = '✅ כבר מוגן';
+      return;
+    }
+    l('⚠️ CSP לא נמצא — מוסיף...', 'warn');
+    
+    if(!original.includes(ANCHOR)){
+      l('❌ לא מצאתי את ה-anchor meta tag. לא יכול לתקן בטוח.', 'err');
+      l('   מחפש: ' + ANCHOR, 'err');
+      return;
+    }
+    l('✅ Anchor נמצא', 'ok');
+    
+    l('\n═══ שלב 3: מוסיף CSP ═══', 'big');
+    const patched = original.replace(ANCHOR, ANCHOR + '\n  ' + CSP_META);
+    
+    // Verify
+    if(!patched.includes(CSP_META)){
+      l('❌ הוספת CSP נכשלה', 'err');
+      return;
+    }
+    const hebrew2 = (patched.match(/[\u0590-\u05FF]/g)||[]).length;
+    if(hebrew2 !== hebrew){
+      l('❌ אזהרה: מספר תווים עברית השתנה! (' + hebrew + ' → ' + hebrew2 + ')', 'err');
+      return;
+    }
+    l('✅ CSP נוסף, עברית נשמרה (' + hebrew2.toLocaleString() + ' תווים)', 'ok');
+    l('📏 גודל חדש: ' + (patched.length/1024).toFixed(0) + ' KB', 'info');
+    
+    l('\n═══ שלב 4: מעלה ל-GitHub ═══', 'big');
+    await gh(token, `/repos/${OWNER}/${REPO}/contents/index.html`, {
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        message: 'Security: add Content-Security-Policy header',
+        content: b64encode(patched),
+        sha: fileData.sha
+      })
+    });
+    l('✅ הועלה בהצלחה!', 'ok');
+    
+    l('\n═══ 🎉 הושלם ═══', 'big');
+    l('\n✅ diary-rinat עכשיו עם CSP מלא (כמו הודיה)', 'ok');
+    l('\n⏱️ GitHub Pages יעדכן תוך 30-60 שניות', 'info');
+    l('🛡️ ההגנה החדשה פעילה אוטומטית — אין מה לעשות', 'info');
     
     goBtn.textContent = '✅ הושלם';
   }catch(e){
-    l('\n❌ שגיאה: '+e.message, 'err');
+    l('\n❌ שגיאה: ' + e.message, 'err');
     console.error(e);
     goBtn.disabled = false;
   }
