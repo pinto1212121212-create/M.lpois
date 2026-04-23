@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>🎯 פתרון סופי אוטומטי</title>
+<style>
+*{box-sizing:border-box}
+body{background:linear-gradient(180deg,#0a0805,#1a0f05);color:#fff;font-family:-apple-system,sans-serif;margin:0;padding:18px;direction:rtl;min-height:100vh}
+.box{max-width:520px;margin:0 auto}
+h1{color:#fbab20;font-size:22px;margin:0 0 6px;text-align:center}
+.sub{color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:16px;text-align:center;line-height:1.5}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:13px;font-weight:700;margin-bottom:5px}
+.field input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#fff;padding:12px;font-size:13px;font-family:inherit}
+.btn{display:block;width:100%;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;border:none;padding:15px;border-radius:12px;font-size:15px;font-weight:800;margin:10px 0;cursor:pointer;font-family:inherit}
+.btn:disabled{opacity:0.5}
+.log{background:rgba(0,0,0,0.5);border:1px solid rgba(124,58,237,0.3);border-radius:10px;padding:12px;margin-top:10px;font-size:11.5px;font-family:monospace;white-space:pre-wrap;word-break:break-all;direction:ltr;text-align:left;color:#ddd6fe;max-height:500px;overflow-y:auto}
+.log .ok{color:#6ee7b7}
+.log .err{color:#fca5a5}
+.log .warn{color:#fcd34d}
+.log .info{color:#93c5fd}
+.log .found{color:#fb923c;font-weight:800}
+.info{background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.3);border-radius:10px;padding:12px;font-size:12.5px;color:#93c5fd;line-height:1.6;margin-bottom:12px}
+</style>
+</head>
+<body><div class="box">
+
+<h1>🎯 פתרון סופי אוטומטי</h1>
+<div class="sub">סורק את כל ה-repos שלך, מזהה איפה הודיה, מתקן את הקוד, מעדכן את הראוטר</div>
+
+<div class="info">
+<b>💡 מה הכלי עושה:</b><br>
+1. סורק את כל ה-repos שלך ב-GitHub<br>
+2. עבור כל repo — מוריד את ה-index.html ובודק אם זה האפליקציה של הודיה<br>
+3. מתקן את הקוד: continueUrl קבוע במקום location.pathname<br>
+4. מעדכן את הראוטר כך שיזהה את ה-repo הנכון<br>
+5. מעלה הכל לכל ה-repos הרלוונטיים
+</div>
+
+<div class="field">
+  <label>🔑 GitHub Token</label>
+  <input type="password" id="tok" placeholder="ghp_...">
+</div>
+
+<button class="btn" id="go" onclick="runAll()">🚀 התחל — סרוק, מצא, תקן</button>
+
+<div class="log" id="log">ממתין...</div>
+
+</div>
+
+<script>
+const OWNER = 'pinto1212121212-create';
+
+const tokInput = document.getElementById('tok');
+const logEl = document.getElementById('log');
+const goBtn = document.getElementById('go');
+
+const savedTok = localStorage.getItem('gh_deploy_token');
+if(savedTok){tokInput.value = savedTok; log('✅ טוקן נטען','ok');}
+
+function log(msg, cls){
+  const span = document.createElement('span');
+  if(cls) span.className = cls;
+  span.textContent = msg + '\n';
+  logEl.appendChild(span);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function clearLog(){logEl.innerHTML = '';}
+
+// GitHub API helper
+async function gh(token, path, opts){
+  const r = await fetch('https://api.github.com' + path, {
+    ...opts,
+    headers: {
+      'Authorization': 'token ' + token,
+      'Accept': 'application/vnd.github.v3+json',
+      ...(opts?.headers || {})
+    }
+  });
+  if(!r.ok){
+    const e = await r.json().catch(()=>({}));
+    throw new Error('GH ' + r.status + ': ' + (e.message || 'unknown'));
+  }
+  return r.json();
+}
+
+async function getFileContent(token, repo, path){
+  // Returns { sha, content (decoded) }
+  try{
+    const data = await gh(token, `/repos/${OWNER}/${repo}/contents/${path}`);
+    const content = atob(data.content.replace(/\n/g, ''));
+    return { sha: data.sha, content };
+  }catch(e){
+    return null;
+  }
+}
+
+async function putFileContent(token, repo, path, content, sha, message){
+  const body = {
+    message,
+    content: btoa(unescape(encodeURIComponent(content)))
+  };
+  if(sha) body.sha = sha;
+  return gh(token, `/repos/${OWNER}/${repo}/contents/${path}`, {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  });
+}
+
+async function runAll(){
+  const token = tokInput.value.trim();
+  if(!token){log('❌ הכנס טוקן', 'err'); return;}
+  localStorage.setItem('gh_deploy_token', token);
+  goBtn.disabled = true;
+  clearLog();
+  
+  try{
+    // ═══ STEP 1: List repos ═══
+    log('═══ שלב 1: סריקת repos ═══', 'info');
+    const repos = await gh(token, `/users/${OWNER}/repos?per_page=100&sort=updated`);
+    log(`מצאתי ${repos.length} repos`, 'ok');
+    
+    // ═══ STEP 2: Find Hodaya's repo ═══
+    log('\n═══ שלב 2: מחפש את האפליקציה של הודיה ═══', 'info');
+    let hodayaRepo = null;
+    let hodayaContent = null;
+    let hodayaSha = null;
+    let rinatRepos = []; // list of Rinat/Daniel-style repos to also fix
+    
+    const candidates = repos.filter(r => !r.fork && !r.archived);
+    
+    for(const r of candidates){
+      log(`  בודק: ${r.name}`, 'info');
+      const file = await getFileContent(token, r.name, 'index.html');
+      if(!file){
+        log(`    (אין index.html)`, 'warn');
+        continue;
+      }
+      const c = file.content;
+      
+      // Detect Hodaya: has "היומן של הודיה" and path references to therapy_hodaya or hodaya prefix
+      const isHodaya = (c.includes('היומן של הודיה') || c.includes('therapy_hodaya')) && 
+                       (c.includes("'hodaya_") || c.includes('hodaya_fb_ratelimit') || c.includes('therapy_hodaya'));
+      // Detect Rinat/Daniel
+      const isRinat = (c.includes('היומן שלנו') || c.includes("'diary'") || c.includes('dr_fb_ratelimit'));
+      
+      if(isHodaya){
+        log(`    🎯 מצאתי את הודיה ב: ${r.name}`, 'found');
+        hodayaRepo = r.name;
+        hodayaContent = c;
+        hodayaSha = file.sha;
+      }else if(isRinat){
+        log(`    📘 רינת/דניאל ב: ${r.name}`, 'info');
+        rinatRepos.push({repo: r.name, content: c, sha: file.sha});
+      }else{
+        log(`    (לא זוהה)`, 'warn');
+      }
+    }
+    
+    if(!hodayaRepo){
+      log('\n❌ לא מצאתי את האפליקציה של הודיה באף repo!', 'err');
+      log('   ודא שה-HTML מכיל את הטקסט "היומן של הודיה"', 'err');
+      goBtn.disabled = false;
+      return;
+    }
+    
+    // ═══ STEP 3: Fix Hodaya's code ═══
+    log('\n═══ שלב 3: מתקן את הקוד של הודיה ═══', 'info');
+    log(`  repo: ${hodayaRepo}`, 'ok');
+    
+    const HARDCODED_CONTINUE = `https://${OWNER}.github.io/${hodayaRepo}/`;
+    log(`  continueUrl קבוע: ${HARDCODED_CONTINUE}`, 'info');
+    
+    // Find the resetPassword function and replace dynamic continueUrl with hardcoded
+    const patternDynamic = /continueUrl:location\.origin\+location\.pathname/g;
+    const patternDynamic2 = /continueUrl:location\.href/g;
+    let newContent = hodayaContent;
+    let changed = false;
+    
+    if(patternDynamic.test(newContent)){
+      newContent = newContent.replace(patternDynamic, `continueUrl:'${HARDCODED_CONTINUE}'`);
+      log(`  ✅ הוחלף location.origin+location.pathname → URL קבוע`, 'ok');
+      changed = true;
+    }
+    if(patternDynamic2.test(newContent)){
+      newContent = newContent.replace(patternDynamic2, `continueUrl:'${HARDCODED_CONTINUE}'`);
+      log(`  ✅ הוחלף location.href → URL קבוע`, 'ok');
+      changed = true;
+    }
+    
+    if(!changed){
+      log(`  ⚠️ לא נמצא pattern של continueUrl דינמי. בודק אם כבר מקודד...`, 'warn');
+      if(newContent.includes(HARDCODED_CONTINUE)){
+        log(`  ℹ️ הקוד כבר מכיל את ה-URL הנכון`, 'info');
+      }else{
+        log(`  ❌ לא מצאתי איפה לתקן! בדוק ידנית`, 'err');
+        goBtn.disabled = false;
+        return;
+      }
+    }else{
+      log(`  📤 מעלה גרסה מתוקנת...`, 'info');
+      await putFileContent(token, hodayaRepo, 'index.html', newContent, hodayaSha, 'Fix: hardcode continueUrl to repo URL');
+      log(`  ✅ עלה בהצלחה!`, 'ok');
+    }
+    
+    // ═══ STEP 4: Fix Rinat/Daniel's code (same fix) ═══
+    log('\n═══ שלב 4: מתקן את הקוד של רינת/דניאל (ליתר ביטחון) ═══', 'info');
+    for(const r of rinatRepos){
+      log(`  repo: ${r.repo}`, 'info');
+      const HARDCODED_RINAT = `https://${OWNER}.github.io/${r.repo}/`;
+      let nc = r.content;
+      let c1 = false;
+      if(/continueUrl:location\.origin\+location\.pathname/.test(nc)){
+        nc = nc.replace(/continueUrl:location\.origin\+location\.pathname/g, `continueUrl:'${HARDCODED_RINAT}'`);
+        c1 = true;
+      }
+      if(/continueUrl:location\.href/.test(nc)){
+        nc = nc.replace(/continueUrl:location\.href/g, `continueUrl:'${HARDCODED_RINAT}'`);
+        c1 = true;
+      }
+      if(c1){
+        log(`    📤 מעלה תיקון...`, 'info');
+        await putFileContent(token, r.repo, 'index.html', nc, r.sha, 'Fix: hardcode continueUrl');
+        log(`    ✅ עלה`, 'ok');
+      }else{
+        log(`    (לא נדרש תיקון)`, 'warn');
+      }
+    }
+    
+    // ═══ STEP 5: Update router to know about Hodaya's real repo ═══
+    log('\n═══ שלב 5: מעדכן את הראוטר ═══', 'info');
+    const routerFile = await getFileContent(token, 'reset-router', 'index.html');
+    if(!routerFile){
+      log(`  ⚠️ לא מצאתי reset-router — מדלג`, 'warn');
+    }else{
+      let routerContent = routerFile.content;
+      // Build new APPS mapping
+      const appsEntries = [];
+      if(rinatRepos.length){
+        for(const r of rinatRepos){
+          appsEntries.push(`    '${r.repo}': 'https://${OWNER}.github.io/${r.repo}/'`);
+        }
+      }
+      appsEntries.push(`    '${hodayaRepo}': 'https://${OWNER}.github.io/${hodayaRepo}/'`);
+      
+      const newAppsBlock = `  const APPS = {\n${appsEntries.join(',\n')}\n  };`;
+      
+      // Replace the existing APPS const
+      const appsPattern = /const APPS = \{[\s\S]*?\};/;
+      if(appsPattern.test(routerContent)){
+        routerContent = routerContent.replace(appsPattern, newAppsBlock);
+        log(`  ✅ עדכנתי את רשימת ה-APPS בראוטר:`, 'ok');
+        for(const e of appsEntries){log(`      ${e.trim()}`, 'info');}
+        
+        log(`  📤 מעלה ראוטר מעודכן...`, 'info');
+        await putFileContent(token, 'reset-router', 'index.html', routerContent, routerFile.sha, 'Update APPS with discovered repos');
+        log(`  ✅ עלה`, 'ok');
+      }else{
+        log(`  ⚠️ לא מצאתי const APPS = {...} בראוטר`, 'warn');
+      }
+    }
+    
+    // ═══ DONE ═══
+    log('\n═══ סיכום סופי ═══', 'info');
+    log('🎯 repo של הודיה: ' + hodayaRepo, 'found');
+    log('🌐 URL לפתיחה:', 'info');
+    log(`   https://${OWNER}.github.io/${hodayaRepo}/`, 'ok');
+    log('\n⏱️ חכה 60 שניות ל-GitHub Pages ואז:', 'info');
+    log('1. נקה cache של הדפדפן', 'info');
+    log('2. פתח את ה-URL למעלה', 'info');
+    log('3. לחץ "שכחתי סיסמה"', 'info');
+    log('4. המייל יעבוד! ✅', 'ok');
+    
+    goBtn.textContent = '✅ הושלם';
+    setTimeout(()=>{goBtn.textContent='🔄 הרץ שוב'; goBtn.disabled=false;}, 5000);
+  }catch(e){
+    log('\n❌ שגיאה: ' + e.message, 'err');
+    console.error(e);
+    goBtn.disabled = false;
+    goBtn.textContent = '🚀 נסה שוב';
+  }
+}
+</script>
+</body>
+</html>
