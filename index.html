@@ -3,424 +3,1036 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>🚀 לוח פרסום</title>
+<title>🛡️ שריון אבטחה מקסימלי</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,sans-serif;background:#0f172a;min-height:100vh;padding:20px;color:white}
-h1{text-align:center;font-size:22px;margin-bottom:4px;color:#5eead4}
-.sub{text-align:center;font-size:13px;color:#475569;margin-bottom:20px}
-.token-row{display:flex;gap:8px;margin-bottom:6px}
-.token-inp{flex:1;background:#1e293b;border:1px solid #334155;border-radius:12px;padding:11px 14px;color:white;font-size:14px;outline:none;text-align:right;font-family:inherit}
-.token-inp:focus{border-color:#5eead4}
-.token-btn{background:#0d9488;border:none;border-radius:12px;padding:11px 16px;color:white;font-weight:700;cursor:pointer;font-size:13px;white-space:nowrap;font-family:inherit}
-.token-status{font-size:12px;text-align:center;margin-bottom:16px;min-height:18px}
-.sites-grid{display:flex;flex-direction:column;gap:12px;margin-bottom:12px}
-.site-card{background:#1e293b;border-radius:16px;padding:16px;border:1px solid #334155}
-.site-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
-.site-name{font-size:15px;font-weight:800;color:white}
-.site-repo{font-size:11px;color:#475569;margin-top:2px}
-.site-link{font-size:11px;color:#5eead4;text-decoration:none;display:inline-block;margin-top:3px}
-.card-actions{display:flex;gap:6px;flex-shrink:0}
-.edit-btn{background:#1e3a5f;border:1px solid #334155;border-radius:8px;padding:6px 10px;color:#7dd3fc;cursor:pointer;font-size:11px;font-family:inherit}
-.copy-btn{background:#134e4a;border:1px solid #0d9488;border-radius:8px;padding:6px 10px;color:#5eead4;cursor:pointer;font-size:11px;font-family:inherit;transition:all .2s}
-.copy-btn.done{background:#059669;color:white;border-color:#10b981}
-.del-btn{background:#7f1d1d;border:none;border-radius:8px;padding:6px 10px;color:#fca5a5;cursor:pointer;font-size:11px;font-family:inherit}
-.deploy-btn{background:linear-gradient(135deg,#0d9488,#0f766e);border:none;border-radius:10px;padding:11px 16px;color:white;font-weight:700;cursor:pointer;font-size:13px;font-family:inherit;width:100%}
-.deploy-btn:disabled{opacity:.5}
-.self-btn{background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;border-radius:10px;padding:10px 16px;color:white;font-weight:700;cursor:pointer;font-size:12px;font-family:inherit;width:100%;margin-top:8px}
-.self-btn:disabled{opacity:.5}
-.prog{background:#0f172a;border-radius:8px;overflow:hidden;margin-top:8px;height:5px;display:none}
-.prog-bar{height:100%;background:linear-gradient(90deg,#0d9488,#5eead4);border-radius:8px;transition:width .4s}
-.card-status{font-size:12px;color:#5eead4;margin-top:6px;min-height:16px;text-align:center}
-.card-status.err{color:#f87171}
-.add-btn{background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;border-radius:16px;padding:16px;text-align:center;color:white;font-size:14px;font-weight:700;font-family:inherit;width:100%;cursor:pointer}
-.add-form{background:#1e293b;border-radius:16px;padding:16px;border:1px solid #7c3aed;margin-top:10px;display:none}
-.add-form.show{display:block}
-.add-inp{width:100%;background:#0f172a;border:1px solid #334155;border-radius:10px;padding:10px 14px;color:white;font-size:14px;outline:none;text-align:right;font-family:inherit;margin-bottom:8px}
-.add-inp:focus{border-color:#5eead4}
-.add-btns{display:flex;gap:8px;margin-top:8px}
-.btn-purple{flex:2;background:#7c3aed;border:none;border-radius:10px;padding:12px;color:white;font-weight:700;cursor:pointer;font-family:inherit}
-.btn-gray{flex:1;background:#334155;border:none;border-radius:10px;padding:12px;color:white;font-weight:700;cursor:pointer;font-family:inherit}
-.file-lbl{font-size:12px;color:#5eead4;text-align:center;min-height:16px;margin:4px 0}
-.new-step{font-size:11px;color:#64748b;text-align:center;min-height:16px;margin-top:4px}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0d9488;color:white;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:600;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
-.toast.err{background:#dc2626}
-.toast.show{opacity:1}
-.edit-overlay{position:fixed;inset:0;background:#0f172a;z-index:998;display:flex;flex-direction:column;padding:14px}
-.edit-overlay.hidden{display:none}
-.edit-top{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.edit-title{flex:1;font-size:15px;font-weight:700;color:#5eead4}
-.edit-textarea{flex:1;background:#1e293b;border:1px solid #334155;border-radius:12px;color:#e2e8f0;font-size:12px;font-family:'Courier New',monospace;padding:12px;resize:none;outline:none;direction:ltr;text-align:left;line-height:1.6}
-.edit-btns{display:flex;gap:8px;margin-top:10px}
-.edit-save{flex:2;background:linear-gradient(135deg,#0d9488,#0f766e);border:none;border-radius:10px;padding:13px;color:white;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit}
-.edit-cancel{flex:1;background:#334155;border:none;border-radius:10px;padding:13px;color:white;font-weight:700;cursor:pointer;font-family:inherit}
-.edit-status{font-size:12px;color:#5eead4;text-align:center;min-height:16px;margin-top:6px}
+*{box-sizing:border-box}
+body{background:linear-gradient(180deg,#0a0805,#1a0f05);color:#fff;font-family:-apple-system,sans-serif;margin:0;padding:16px;direction:rtl;min-height:100vh}
+.box{max-width:560px;margin:0 auto}
+h1{background:linear-gradient(135deg,#fbab20,#f97316,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:26px;margin:0 0 6px;text-align:center;font-weight:900}
+.sub{color:rgba(255,255,255,0.65);font-size:13px;margin-bottom:14px;text-align:center;line-height:1.6}
+.info{background:linear-gradient(135deg,rgba(239,68,68,0.12),rgba(220,38,38,0.06));border:2px solid rgba(239,68,68,0.5);border-radius:12px;padding:13px;margin-bottom:14px;font-size:13px;color:#fca5a5;line-height:1.65}
+.info b{color:#fecaca}
+.info code{background:rgba(239,68,68,0.2);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:11px}
+
+.drop{background:rgba(255,255,255,0.03);border:2px dashed rgba(251,171,32,0.4);border-radius:14px;padding:28px 16px;text-align:center;cursor:pointer;margin-bottom:14px;transition:all 0.2s}
+.drop:hover,.drop.active{border-color:#fbab20;background:rgba(251,171,32,0.06)}
+.drop-icon{font-size:40px;margin-bottom:8px}
+.drop-title{font-size:16px;font-weight:800;color:#fbab20;margin-bottom:4px}
+.drop-sub{font-size:12px;color:rgba(255,255,255,0.5)}
+
+.file-info{background:rgba(16,185,129,0.08);border:1px solid #10b981;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12.5px;color:#6ee7b7;display:none}
+.file-info.show{display:block}
+
+.layer-group{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:14px;margin-bottom:12px}
+.layer-ttl{color:#fbab20;font-weight:800;font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.layer-ttl .count{background:rgba(251,171,32,0.25);color:#fbab20;padding:2px 8px;border-radius:10px;font-size:11px;margin-right:auto}
+
+.opt{display:flex;align-items:flex-start;padding:10px;background:rgba(0,0,0,0.25);border-radius:8px;margin-bottom:6px;cursor:pointer;border:1px solid transparent;transition:all 0.15s}
+.opt.active{border-color:#10b981;background:rgba(16,185,129,0.08)}
+.opt.required{opacity:0.85}
+.opt input{margin-left:10px;width:18px;height:18px;accent-color:#10b981;margin-top:2px;flex-shrink:0}
+.opt-body{flex:1}
+.opt-name{font-size:13px;font-weight:700;color:#fff}
+.opt-desc{font-size:11px;color:rgba(255,255,255,0.55);margin-top:2px;line-height:1.4}
+.opt.required .opt-name::after{content:' (חובה)';color:#fbab20;font-weight:800;font-size:10px}
+.opt-needs{font-size:10px;color:#fbab20;margin-top:3px;font-style:italic}
+
+.config-section{display:none;background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.35);border-radius:10px;padding:12px;margin-top:8px}
+.config-section.show{display:block}
+.config-section label{display:block;font-size:12px;font-weight:700;margin-bottom:4px;color:#c4b5fd;margin-top:8px}
+.config-section label:first-child{margin-top:0}
+.config-section input,.config-section textarea{width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;padding:10px;font-size:12.5px;font-family:inherit}
+.config-section textarea{font-family:monospace;font-size:11px;resize:vertical;min-height:70px}
+.config-section .hint{font-size:10.5px;color:rgba(255,255,255,0.5);margin-top:3px;line-height:1.5}
+
+.btn{display:block;width:100%;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;padding:16px;border-radius:12px;font-size:16px;font-weight:800;margin:10px 0;cursor:pointer;font-family:inherit;box-shadow:0 4px 20px rgba(239,68,68,0.35)}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
+
+.log{background:rgba(0,0,0,0.55);border:1px solid rgba(124,58,237,0.3);border-radius:10px;padding:12px;margin-top:10px;font-size:12px;font-family:monospace;white-space:pre-wrap;word-break:break-all;direction:ltr;text-align:left;color:#ddd6fe;max-height:400px;overflow-y:auto}
+.log .ok{color:#6ee7b7}
+.log .err{color:#fca5a5}
+.log .warn{color:#fcd34d}
+.log .info{color:#93c5fd}
+.log .big{font-size:13px;font-weight:800;color:#fb923c}
+
+.download{display:none;background:linear-gradient(135deg,#fbab20,#f97316);color:#fff;border:none;padding:18px;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;width:100%;margin-top:12px;text-align:center;text-decoration:none;box-shadow:0 6px 24px rgba(251,171,32,0.4)}
+.download.show{display:block}
+
+.checkall{background:rgba(16,185,129,0.1);border:1px solid #10b981;border-radius:8px;padding:8px 12px;margin-bottom:10px;cursor:pointer;text-align:center;font-size:12.5px;font-weight:700;color:#6ee7b7}
 </style>
 </head>
-<body>
+<body><div class="box">
 
-<h1>🚀 לוח פרסום</h1>
-<p class="sub">עדכן כל אתר בלחיצה אחת</p>
+<h1>🛡️ שריון מקסימלי</h1>
+<div class="sub">כל שכבות האבטחה הקיימות — על כל קובץ HTML</div>
 
-<div class="token-row">
-  <input class="token-inp" id="gh-token" type="password" placeholder="GitHub Token שלך..." dir="ltr">
-  <button class="token-btn" onclick="saveToken()">💾 שמור</button>
-</div>
-<div class="token-status" id="token-status"></div>
-
-<div class="sites-grid" id="sites-grid"></div>
-
-<button class="add-btn" onclick="toggleAddForm()">✨ הוסף אתר חדש — הכל אוטומטי</button>
-
-<div class="add-form" id="add-form">
-  <div style="font-size:12px;color:#5eead4;margin-bottom:12px;text-align:center">ריפו נוצר + Pages מופעל אוטומטית 🎉</div>
-  <input class="add-inp" id="new-name" placeholder="שם האתר (למשל: אתר רינת)">
-  <input class="add-inp" id="new-repo" placeholder="שם ריפו (למשל: rinat-site)" dir="ltr">
-  <input class="add-inp" id="new-owner" placeholder="שם משתמש גיטהאב" dir="ltr" value="pinto1212121212-create">
-  <input type="file" accept=".html" id="new-file" style="display:none" onchange="document.getElementById('new-file-lbl').textContent=this.files[0]?'📄 '+this.files[0].name:''">
-  <button class="deploy-btn" onclick="document.getElementById('new-file').click()" style="margin-bottom:4px">📁 בחר קובץ HTML</button>
-  <div class="file-lbl" id="new-file-lbl"></div>
-  <div class="prog" id="new-prog"><div class="prog-bar" id="new-progbar" style="width:0%"></div></div>
-  <div class="new-step" id="new-step"></div>
-  <div class="add-btns">
-    <button class="btn-gray" onclick="toggleAddForm()">ביטול</button>
-    <button class="btn-purple" id="btn-create" onclick="createAndDeploy()">🚀 צור ופרסם!</button>
-  </div>
+<div class="info">
+<b>⚠️ קובץ משוריין = קובץ נעול</b><br>
+אחרי שריון עם auth מלא — <b>אי אפשר להיכנס לקובץ בלי:</b><br>
+• הסיסמה שתגדיר<br>
+• קוד הזמנה (אם מסומן)<br>
+• אימות email (אם מסומן)<br>
+• טביעת אצבע (אם מסומן)<br>
+💡 שמור <b>הכל</b> לפני שריון!
 </div>
 
-<div class="edit-overlay hidden" id="edit-overlay">
-  <div class="edit-top">
-    <div class="edit-title" id="edit-title">✏️ עריכה</div>
-    <button class="edit-cancel" onclick="closeEditor()" style="padding:7px 14px;font-size:13px">✕ סגור</button>
-  </div>
-  <textarea class="edit-textarea" id="edit-textarea" spellcheck="false"></textarea>
-  <div class="edit-status" id="edit-status"></div>
-  <div class="edit-btns">
-    <button class="edit-cancel" onclick="closeEditor()">ביטול</button>
-    <button class="edit-cancel" onclick="downloadEdit()" style="background:#1e3a5f;color:#7dd3fc;border:1px solid #334155">⬇️ הורד</button>
-    <button class="edit-save" id="edit-save-btn" onclick="saveEdit()">💾 שמור ופרסם</button>
-  </div>
-</div>
+<label class="drop" id="drop">
+  <div class="drop-icon">📁</div>
+  <div class="drop-title">בחר קובץ HTML לשריון</div>
+  <div class="drop-sub">או גרור לכאן</div>
+  <input type="file" id="file" accept=".html,.htm" hidden>
+</label>
 
-<div class="toast" id="toast"></div>
+<div class="file-info" id="fileInfo"></div>
 
-<div id="del-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center">
-  <div style="background:#1e293b;border-radius:16px;padding:24px;margin:20px;border:1px solid #f87171;text-align:center">
-    <div style="font-size:32px;margin-bottom:8px">🗑</div>
-    <div id="del-modal-name" style="font-size:16px;font-weight:700;margin-bottom:6px"></div>
-    <div style="font-size:13px;color:#94a3b8;margin-bottom:20px">למחוק מהרשימה?</div>
-    <div style="display:flex;gap:10px">
-      <button onclick="closeDelModal()" style="flex:1;background:#334155;border:none;border-radius:10px;padding:12px;color:white;font-weight:700;cursor:pointer;font-size:14px;font-family:inherit">ביטול</button>
-      <button onclick="doDelete()" style="flex:1;background:#dc2626;border:none;border-radius:10px;padding:12px;color:white;font-weight:700;cursor:pointer;font-size:14px;font-family:inherit">מחק</button>
+<div class="checkall" onclick="toggleAll()">✅ סמן/בטל הכל</div>
+
+<!-- ═══ GROUP 1: Basic Web Security ═══ -->
+<div class="layer-group">
+  <div class="layer-ttl">🌐 אבטחת Web בסיסית <span class="count">3</span></div>
+  
+  <label class="opt required active">
+    <input type="checkbox" id="opt-headers" checked disabled>
+    <div class="opt-body">
+      <div class="opt-name">🔐 8 Security Headers</div>
+      <div class="opt-desc">X-Frame-Options, nosniff, Referrer Policy, Cache-Control, Permissions-Policy</div>
     </div>
+  </label>
+  
+  <label class="opt active">
+    <input type="checkbox" id="opt-csp" checked>
+    <div class="opt-body">
+      <div class="opt-name">🛡️ Content Security Policy חכם</div>
+      <div class="opt-desc">CSP מותאם אוטומטית ל-APIs שזוהו בקובץ. מונע XSS</div>
+    </div>
+  </label>
+  
+  <label class="opt active">
+    <input type="checkbox" id="opt-antidebug" checked>
+    <div class="opt-body">
+      <div class="opt-name">🚫 Anti-debug</div>
+      <div class="opt-desc">חוסם F12, right-click, view source. זיהוי DevTools</div>
+    </div>
+  </label>
+</div>
+
+<!-- ═══ GROUP 2: Access Control ═══ -->
+<div class="layer-group">
+  <div class="layer-ttl">🔒 בקרת גישה <span class="count">4</span></div>
+  
+  <label class="opt">
+    <input type="checkbox" id="opt-password">
+    <div class="opt-body">
+      <div class="opt-name">🔐 סיסמת גישה (PBKDF2)</div>
+      <div class="opt-desc">סיסמה בסיסית כדי לפתוח את הקובץ. Hash מקומי, 100k iterations</div>
+      <div class="opt-needs">צריך: סיסמה שתבחר</div>
+    </div>
+  </label>
+  
+  <div class="config-section" id="cfg-password">
+    <label>🔑 בחר סיסמת גישה (8+ תווים):</label>
+    <input type="password" id="cfg-password-val" placeholder="סיסמה חזקה">
+    <div class="hint">⚠️ בלי זה לא תוכל לפתוח את הקובץ! שמור בוואטסאפ או Keep.</div>
   </div>
+  
+  <label class="opt">
+    <input type="checkbox" id="opt-firebase-auth">
+    <div class="opt-body">
+      <div class="opt-name">🔥 Firebase Authentication מלא</div>
+      <div class="opt-desc">הרשמה, כניסה, שחזור סיסמה — כל מה שיש בהודיה/רינת</div>
+      <div class="opt-needs">צריך: Firebase project (API Key + Auth Domain)</div>
+    </div>
+  </label>
+  
+  <div class="config-section" id="cfg-firebase-auth">
+    <label>🔑 Firebase API Key:</label>
+    <input type="text" id="cfg-fb-api" placeholder="AIzaSyC..." value="AIzaSyCsh6qM-WgbWn1LHx2FTVio35ZPvMQ0aG4">
+    <label>🌐 Firebase Database URL:</label>
+    <input type="text" id="cfg-fb-db" placeholder="https://...firebaseio.com" value="https://diary-daniel-rinat-default-rtdb.firebaseio.com">
+    <label>📁 נתיב באפליקציה (app path):</label>
+    <input type="text" id="cfg-fb-path" placeholder="deploy_panel" value="deploy_panel">
+    <div class="hint">הרישומים יישמרו ב-/[path]/users/</div>
+  </div>
+  
+  <label class="opt">
+    <input type="checkbox" id="opt-invite">
+    <div class="opt-body">
+      <div class="opt-name">🎟️ קוד הזמנה בהרשמה</div>
+      <div class="opt-desc">רק מי שיש לו את הקוד — יכול להירשם</div>
+      <div class="opt-needs">צריך: קוד הזמנה + Firebase Auth מסומן</div>
+    </div>
+  </label>
+  
+  <div class="config-section" id="cfg-invite">
+    <label>🎟️ קוד הזמנה:</label>
+    <input type="text" id="cfg-invite-val" placeholder="#Deploy2026!" value="#Deploy2026!">
+  </div>
+  
+  <label class="opt">
+    <input type="checkbox" id="opt-biometric">
+    <div class="opt-body">
+      <div class="opt-name">👆 טביעת אצבע / Face ID (WebAuthn)</div>
+      <div class="opt-desc">אחרי כניסה ראשונה — אפשרות להפעיל כניסה ביומטרית</div>
+      <div class="opt-needs">צריך: Firebase Auth מסומן + מכשיר תומך</div>
+    </div>
+  </label>
+  
+  <label class="opt">
+    <input type="checkbox" id="opt-sms2fa">
+    <div class="opt-body">
+      <div class="opt-name">📱 אימות SMS (2FA)</div>
+      <div class="opt-desc">אחרי email+סיסמה, Firebase שולח SMS עם קוד 6 ספרות. רמת אבטחה מקסימלית!</div>
+      <div class="opt-needs">צריך: Firebase Auth + Phone Provider מופעל ב-Firebase Console + reCAPTCHA</div>
+    </div>
+  </label>
+  
+  <div class="config-section" id="cfg-sms2fa">
+    <label>🌍 קידומת מדינה (אופציונלי):</label>
+    <input type="text" id="cfg-sms-country" placeholder="+972" value="+972">
+    <div class="hint">קידומת דיפולטיבית שנוספת אוטומטית אם המשתמש הקליד בלעדיה. ישראל: +972</div>
+    <label>⏱️ תוקף קוד SMS (דקות):</label>
+    <input type="number" id="cfg-sms-expire" value="5" min="1" max="60">
+    <div class="hint" style="color:#fcd34d">⚠️ <b>חשוב:</b> לפני שזה יעבוד, עלה ל-Firebase Console → Authentication → Sign-in method → <b>הפעל "Phone"</b>. עלות: ~$0.06 ל-SMS בישראל.</div>
+  </div>
+</div>
+
+<!-- ═══ GROUP 3: Rate Limiting & Monitoring ═══ -->
+<div class="layer-group">
+  <div class="layer-ttl">⏱️ הגבלה וניטור <span class="count">3</span></div>
+  
+  <label class="opt active">
+    <input type="checkbox" id="opt-rate" checked>
+    <div class="opt-body">
+      <div class="opt-name">⏱️ Rate Limit</div>
+      <div class="opt-desc">5 ניסיונות כושלים → חסום שעה</div>
+    </div>
+  </label>
+  
+  <label class="opt active">
+    <input type="checkbox" id="opt-audit" checked>
+    <div class="opt-body">
+      <div class="opt-name">📋 Audit Log מפורט</div>
+      <div class="opt-desc">כניסה, יציאה, כישלונות, פתיחת DevTools — הכל נרשם</div>
+    </div>
+  </label>
+  
+  <label class="opt active">
+    <input type="checkbox" id="opt-fingerprint" checked>
+    <div class="opt-body">
+      <div class="opt-name">🖥️ Device Fingerprint</div>
+      <div class="opt-desc">מזהה מכשירים — מתריע על כניסה ממכשיר חדש</div>
+    </div>
+  </label>
+</div>
+
+<!-- ═══ GROUP 4: Data Protection ═══ -->
+<div class="layer-group">
+  <div class="layer-ttl">🔐 הגנת נתונים <span class="count">3</span></div>
+  
+  <label class="opt active">
+    <input type="checkbox" id="opt-encrypt-ls" checked>
+    <div class="opt-body">
+      <div class="opt-name">🔒 הצפנת localStorage</div>
+      <div class="opt-desc">AES-256 — ערכים ב-localStorage מוצפנים עם סיסמת הגישה</div>
+    </div>
+  </label>
+  
+  <label class="opt">
+    <input type="checkbox" id="opt-session-timeout">
+    <div class="opt-body">
+      <div class="opt-name">⏰ Timeout אוטומטי</div>
+      <div class="opt-desc">יציאה אוטומטית אחרי חוסר פעילות של 30 דק'</div>
+    </div>
+  </label>
+  
+  <label class="opt active">
+    <input type="checkbox" id="opt-clipboard-clear" checked>
+    <div class="opt-body">
+      <div class="opt-name">📋 ניקוי Clipboard</div>
+      <div class="opt-desc">אחרי העתקת טוקן/סיסמה - ניקוי אוטומטי אחרי 30 שניות</div>
+    </div>
+  </label>
+</div>
+
+<button class="btn" id="go" onclick="armor()" disabled>🛡️ שרוין את הקובץ — כל השכבות</button>
+
+<a class="download" id="dl" download="armored.html">⬇️ הורד קובץ משוריין</a>
+
+<div class="log" id="log">ממתין לקובץ...</div>
+
 </div>
 
 <script>
-const DEFAULT_SITES=[
-  {id:'panel',    name:'🚀 לוח פרסום',                 repo:'deploy-panel',   owner:'pinto1212121212-create'},
-  {id:'hodaya',   name:'💙 היומן שלי — הודיה',         repo:'therapy-hodaya', owner:'pinto1212121212-create'},
-  {id:'rinat',    name:'📖 היומן שלנו — רינת ודניאל',  repo:'diary-rinat',    owner:'pinto1212121212-create'},
-  {id:'laser',    name:'💎 RB Pro Laser',               repo:'rb-prolaser',    owner:'pinto1212121212-create'},
-  {id:'laregesh', name:'🌸 בית לרגש',                  repo:'beit-laregesh',  owner:'pinto1212121212-create'},
-];
+let loadedFile = null;
+let loadedContent = '';
 
-function getDeletedIds(){
-  try{return JSON.parse(localStorage.getItem('deleted_ids')||'[]');}catch(e){return [];}
-}
-function getSites(){
-  try{
-    const s=localStorage.getItem('deploy_sites');
-    const deleted=getDeletedIds();
-    if(s===null){
-      // פעם ראשונה — שומר DEFAULT בלי המחוקים
-      const initial=DEFAULT_SITES.filter(x=>!deleted.includes(x.id));
-      localStorage.setItem('deploy_sites',JSON.stringify(initial));
-      return initial;
-    }
-    return (JSON.parse(s)||[]).filter(x=>!deleted.includes(x.id));
-  }catch(e){return DEFAULT_SITES;}
-}
-function saveSites(s){localStorage.setItem('deploy_sites',JSON.stringify(s));}
-function getToken(){return localStorage.getItem('gh_deploy_token')||'';}
+const dropEl = document.getElementById('drop');
+const fileEl = document.getElementById('file');
+const fileInfoEl = document.getElementById('fileInfo');
+const logEl = document.getElementById('log');
+const goBtn = document.getElementById('go');
+const dlBtn = document.getElementById('dl');
 
-let _toastTimer;
-function toast(msg,isErr=false){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.className='toast'+(isErr?' err':'')+' show';
-  clearTimeout(_toastTimer);_toastTimer=setTimeout(()=>t.classList.remove('show'),3200);
-}
-
-function saveToken(){
-  const t=document.getElementById('gh-token').value.trim();
-  if(!t)return;
-  localStorage.setItem('gh_deploy_token',t);
-  document.getElementById('gh-token').value='';
-  showTokenStatus();toast('✅ Token נשמר!');
-}
-function clearToken(){
-  localStorage.removeItem('gh_deploy_token');showTokenStatus();toast('🗑 Token נמחק');
-}
-function showTokenStatus(){
-  const el=document.getElementById('token-status');
-  el.innerHTML=getToken()
-    ?'<span style="color:#4ade80">✅ Token מחובר</span> &nbsp;·&nbsp; <span style="color:#475569;cursor:pointer;text-decoration:underline" onclick="clearToken()">נקה</span>'
-    :'<span style="color:#f87171">⚠️ Token לא הוגדר</span>';
-}
-
-function renderSites(){
-  document.getElementById('sites-grid').innerHTML=getSites().map(s=>{
-    const url=`https://${s.owner}.github.io/${s.repo}`;
-    const isSelf=(s.repo==='deploy-panel');
-    return`<div class="site-card">
-      <div class="site-card-top">
-        <div>
-          <div class="site-name">${s.name}</div>
-          <div class="site-repo">${s.owner}/${s.repo}</div>
-          <a class="site-link" href="${url}" target="_blank">🌐 פתח אתר</a>
-        </div>
-        <div class="card-actions">
-          <button class="edit-btn" onclick="moveSite('${s.id}',-1)" style="padding:6px 8px">▲</button>
-          <button class="edit-btn" onclick="moveSite('${s.id}',1)" style="padding:6px 8px">▼</button>
-          <button class="copy-btn" id="copy-${s.id}" onclick="copyLink('${s.id}','${url}')">🔗</button>
-          <button class="edit-btn" onclick="openEditor('${s.repo}','${s.owner}','${s.name}')">✏️</button>
-          <button class="del-btn" onclick="confirmDelete('${s.id}','${s.name}')">🗑</button>
-        </div>
-      </div>
-      <input type="file" accept=".html" id="file-${s.id}" style="display:none" onchange="doUpload('${s.id}','${s.repo}','${s.owner}',this)">
-      <button class="deploy-btn" id="btn-${s.id}" onclick="document.getElementById('file-${s.id}').click()">🚀 בחר קובץ ופרסם</button>
-      ${isSelf?`<button class="self-btn" id="self-btn-${s.id}" onclick="deploySelf('${s.id}','${s.repo}','${s.owner}')">♻️ עדכן את הצינור עצמו (מהיר)</button>`:''}
-      <div class="prog" id="prog-${s.id}"><div class="prog-bar" id="progbar-${s.id}" style="width:0%"></div></div>
-      <div class="card-status" id="status-${s.id}"></div>
-    </div>`;
-  }).join('');
-}
-
-// העלאה עצמית — לוקחת את ה-HTML של הדף הנוכחי ומעלה לגיטהאב
-async function deploySelf(id,repo,owner){
-  const token=getToken();if(!token){toast('⚠️ נא להכניס Token קודם',true);return;}
-  const btn=document.getElementById('self-btn-'+id),st=document.getElementById('status-'+id);
-  const prog=document.getElementById('prog-'+id),pb=document.getElementById('progbar-'+id);
-  if(!confirm('♻️ לעדכן את הצינור עצמו לגיטהאב?\n\nהגרסה שרצה עכשיו בדפדפן תעלה ותחליף את זו שבגיטהאב.'))return;
-  btn.disabled=true;btn.textContent='⏳ מעלה...';prog.style.display='block';pb.style.width='20%';
-  st.textContent='אוסף HTML נוכחי...';st.className='card-status';
-  try{
-    // שליפת ה-HTML המלא של הדף הנוכחי
-    const content='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
-    const encoded=btoa(unescape(encodeURIComponent(content)));
-    pb.style.width='50%';st.textContent='מעלה לגיטהאב...';
-    const apiUrl=`https://api.github.com/repos/${owner}/${repo}/contents/index.html`;
-    const chk=await (await fetch(apiUrl+`?t=${Date.now()}`,{headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Cache-Control':'no-cache'}})).json();
-    const body={message:'Self-update via deploy panel',content:encoded};if(chk.sha)body.sha=chk.sha;
-    pb.style.width='80%';
-    const d=await (await fetch(apiUrl,{method:'PUT',headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)})).json();
-    if(!d.content)throw new Error(d.message||'שגיאה בהעלאה');
-    pb.style.width='100%';
-    btn.textContent='✅ עלה! מרענן...';btn.style.background='#059669';
-    st.innerHTML=`✅ <a href="https://${owner}.github.io/${repo}" target="_blank" style="color:#5eead4;text-decoration:underline;font-weight:700">פתח אתר עכשיו ←</a>`;
-    toast('✅ הצינור עודכן בהצלחה!');
-    setTimeout(()=>location.reload(),4000);
-  }catch(e){
-    btn.textContent='❌ שגיאה';btn.disabled=false;st.textContent=e.message;st.className='card-status err';
-    toast('❌ '+e.message,true);
-    setTimeout(()=>{btn.textContent='♻️ עדכן את הצינור עצמו (מהיר)';prog.style.display='none';pb.style.width='0%';},3000);
+// Toggle option states
+function updateOptUI(){
+  document.querySelectorAll('.opt').forEach(el => {
+    const cb = el.querySelector('input');
+    if(cb && !cb.disabled) el.classList.toggle('active', cb.checked);
+  });
+  // Show/hide config sections
+  ['password', 'firebase-auth', 'invite', 'sms2fa'].forEach(id => {
+    const cb = document.getElementById('opt-' + id);
+    const cfg = document.getElementById('cfg-' + id);
+    if(cb && cfg) cfg.classList.toggle('show', cb.checked);
+  });
+  const fb = document.getElementById('opt-firebase-auth');
+  // Biometric requires firebase
+  const bio = document.getElementById('opt-biometric');
+  if(bio && !fb.checked && bio.checked){bio.checked = false; bio.closest('.opt').classList.remove('active');}
+  // Invite requires firebase
+  const inv = document.getElementById('opt-invite');
+  if(inv && !fb.checked && inv.checked){inv.checked = false; inv.closest('.opt').classList.remove('active');}
+  // SMS 2FA requires firebase
+  const sms = document.getElementById('opt-sms2fa');
+  if(sms && !fb.checked && sms.checked){
+    sms.checked = false;
+    sms.closest('.opt').classList.remove('active');
+    document.getElementById('cfg-sms2fa').classList.remove('show');
   }
 }
 
-async function enablePages(owner,repo,token){
-  try{await fetch(`https://api.github.com/repos/${owner}/${repo}/pages`,{method:'POST',
-    headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
-    body:JSON.stringify({source:{branch:'main',path:'/'}})});}catch(e){}
+document.querySelectorAll('.opt input').forEach(cb => {
+  cb.addEventListener('change', updateOptUI);
+});
+
+function toggleAll(){
+  const any = [...document.querySelectorAll('.opt input:not(:disabled)')].some(cb => !cb.checked);
+  document.querySelectorAll('.opt input:not(:disabled)').forEach(cb => {cb.checked = any;});
+  updateOptUI();
 }
 
-async function doUpload(id,repo,owner,input){
-  const file=input.files[0];if(!file)return;
-  const token=getToken();if(!token){toast('⚠️ נא להכניס Token קודם',true);return;}
-  const btn=document.getElementById('btn-'+id),st=document.getElementById('status-'+id);
-  const prog=document.getElementById('prog-'+id),pb=document.getElementById('progbar-'+id);
-  btn.disabled=true;btn.textContent='⏳ מעלה...';prog.style.display='block';pb.style.width='20%';
-  st.textContent='קורא קובץ...';st.className='card-status';
-  try{
-    const content=await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsText(file);});
-    const encoded=btoa(unescape(encodeURIComponent(content)));
-    pb.style.width='50%';st.textContent='מעלה לגיטהאב...';
-    const apiUrl=`https://api.github.com/repos/${owner}/${repo}/contents/index.html`;
-    const chk=await (await fetch(apiUrl,{headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}})).json();
-    const body={message:'Update via deploy panel',content:encoded};if(chk.sha)body.sha=chk.sha;
-    pb.style.width='75%';
-    const d=await (await fetch(apiUrl,{method:'PUT',headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)})).json();
-    if(!d.content)throw new Error(d.message||'שגיאה בהעלאה');
-    pb.style.width='90%';st.textContent='מפעיל Pages...';
-    await enablePages(owner,repo,token);
-    pb.style.width='100%';
-    btn.textContent='✅ עלה!';btn.style.background='#059669';
-    st.innerHTML=`✅ <a href="https://${owner}.github.io/${repo}" target="_blank" style="color:#5eead4;text-decoration:underline;font-weight:700">פתח אתר עכשיו ←</a>`;
-    toast('✅ '+repo+' עלה בהצלחה!');
-    // אם עדכנו את הצינור עצמו — נרענן אחרי 4 שניות
-    if(repo==='deploy-panel'){
-      st.textContent='מרענן...';
-      setTimeout(()=>location.reload(),4000);
+function l(msg, cls){
+  const s = document.createElement('span');
+  if(cls) s.className = cls;
+  s.textContent = msg + '\n';
+  logEl.appendChild(s);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+function clearLog(){logEl.innerHTML = '';}
+
+dropEl.addEventListener('click', e => {if(e.target.tagName !== 'INPUT') fileEl.click();});
+dropEl.addEventListener('dragover', e => {e.preventDefault(); dropEl.classList.add('active');});
+dropEl.addEventListener('dragleave', () => dropEl.classList.remove('active'));
+dropEl.addEventListener('drop', e => {
+  e.preventDefault(); dropEl.classList.remove('active');
+  if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileEl.addEventListener('change', e => {
+  if(e.target.files.length) handleFile(e.target.files[0]);
+});
+
+function handleFile(file){
+  if(!file.name.match(/\.html?$/i)){
+    fileInfoEl.classList.add('show');
+    fileInfoEl.style.background = 'rgba(239,68,68,0.08)';
+    fileInfoEl.style.borderColor = '#ef4444';
+    fileInfoEl.style.color = '#fca5a5';
+    fileInfoEl.textContent = '❌ בחר קובץ HTML';
+    return;
+  }
+  loadedFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    loadedContent = e.target.result;
+    fileInfoEl.innerHTML = '✅ נטען: <b>' + file.name + '</b> (' + (file.size/1024).toFixed(0) + ' KB)';
+    fileInfoEl.classList.add('show');
+    fileInfoEl.style.background = 'rgba(16,185,129,0.08)';
+    fileInfoEl.style.borderColor = '#10b981';
+    fileInfoEl.style.color = '#6ee7b7';
+    goBtn.disabled = false;
+    dlBtn.classList.remove('show');
+    clearLog();
+    l('✅ קובץ נטען - מוכן לשריון מקסימלי', 'ok');
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+// ═══ BUILD MODULES ═══
+const HEADERS = `  <!-- Security Headers -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=(), payment=()">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">`;
+
+function detectAPIs(content){
+  return {
+    firebase: /firebaseio\.com|firebase\.googleapis|identitytoolkit\.googleapis|securetoken\.googleapis/i.test(content),
+    github: /api\.github\.com|raw\.githubusercontent\.com/i.test(content),
+    emailjs: /emailjs\.com/i.test(content),
+    anthropic: /api\.anthropic\.com/i.test(content),
+    cdnjs: /cdnjs\.cloudflare\.com/i.test(content),
+    googleFonts: /fonts\.googleapis\.com|fonts\.gstatic\.com/i.test(content)
+  };
+}
+
+function buildCSP(apis, content, needsFirebase){
+  const connect = ["'self'"];
+  const script = ["'self'", "'unsafe-inline'"];
+  const style = ["'self'", "'unsafe-inline'"];
+  const font = ["'self'", "data:"];
+  const img = ["'self'", "data:", "blob:", "https:"];
+  
+  if(apis.firebase || needsFirebase){
+    const dbs = content.match(/https:\/\/[a-z0-9-]+\.firebaseio\.com/gi) || [];
+    dbs.forEach(d => { if(!connect.includes(d)) connect.push(d); });
+    connect.push('https://identitytoolkit.googleapis.com', 'https://securetoken.googleapis.com');
+  }
+  if(apis.github) connect.push('https://api.github.com', 'https://raw.githubusercontent.com');
+  if(apis.emailjs){connect.push('https://api.emailjs.com'); script.push('https://cdn.emailjs.com');}
+  if(apis.anthropic) connect.push('https://api.anthropic.com');
+  if(apis.cdnjs) script.push('https://cdnjs.cloudflare.com');
+  if(apis.googleFonts){style.push('https://fonts.googleapis.com'); font.push('https://fonts.gstatic.com');}
+  
+  const u = a => [...new Set(a)];
+  return '  <meta http-equiv="Content-Security-Policy" content="' +
+    "default-src 'self'; " +
+    'script-src ' + u(script).join(' ') + '; ' +
+    'style-src ' + u(style).join(' ') + '; ' +
+    'font-src ' + u(font).join(' ') + '; ' +
+    'img-src ' + u(img).join(' ') + '; ' +
+    'connect-src ' + u(connect).join(' ') + '; ' +
+    "media-src 'self' blob:; " +
+    "frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; " +
+    'upgrade-insecure-requests">';
+}
+
+const ANTIDEBUG = `
+  <!-- Anti-debug -->
+  <script>
+  (function(){
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'F12' || ((e.ctrlKey||e.metaKey) && e.shiftKey && ['I','J','C'].includes(e.key)) || ((e.ctrlKey||e.metaKey) && e.key === 'u'))e.preventDefault();
+    });
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    let dt = false;
+    setInterval(() => {
+      if(window.outerWidth - window.innerWidth > 160 || window.outerHeight - window.innerHeight > 160){
+        if(!dt){dt = true; if(window.__audit)window.__audit('devtools_opened');}
+      }
+    }, 1000);
+  })();
+  <\/script>`;
+
+const RATE_LIMIT = `
+  <!-- Rate Limit -->
+  <script>
+  window.__rateLimit = {
+    _key: 'rl_' + location.pathname,
+    _max: 5,
+    _window: 3600000,
+    check(){
+      const d = this._load();
+      if(d.blockedUntil && Date.now() < d.blockedUntil){
+        const m = Math.ceil((d.blockedUntil - Date.now())/60000);
+        throw new Error('חסום למשך ' + m + ' דקות');
+      }
+      return true;
+    },
+    fail(){const d=this._load(); d.fails=(d.fails||0)+1; if(d.fails>=this._max){d.blockedUntil=Date.now()+this._window; d.fails=0;} this._save(d); return this._max-d.fails;},
+    success(){this._save({fails:0, blockedUntil:0});},
+    _load(){try{return JSON.parse(localStorage.getItem(this._key)||'{"fails":0}');}catch(e){return {fails:0};}},
+    _save(d){try{localStorage.setItem(this._key, JSON.stringify(d));}catch(e){}}
+  };
+  <\/script>`;
+
+const AUDIT = `
+  <!-- Audit Log -->
+  <script>
+  (function(){
+    const KEY = 'audit_' + location.pathname;
+    window.__audit = function(ev, data){
+      try{
+        const log = JSON.parse(localStorage.getItem(KEY)||'[]');
+        log.push({t: Date.now(), e: ev, d: data||null});
+        while(log.length > 500) log.shift();
+        localStorage.setItem(KEY, JSON.stringify(log));
+      }catch(e){}
+    };
+    window.__audit('page_loaded');
+  })();
+  <\/script>`;
+
+const FINGERPRINT = `
+  <!-- Device Fingerprint -->
+  <script>
+  window.__fingerprint = async function(){
+    const data = navigator.userAgent + '|' + navigator.language + '|' + screen.width + 'x' + screen.height + '|' + (navigator.hardwareConcurrency||'') + '|' + new Date().getTimezoneOffset();
+    const buf = new TextEncoder().encode(data);
+    const hash = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('').substring(0,16);
+  };
+  <\/script>`;
+
+const ENCRYPT_LS = `
+  <!-- Encrypted localStorage -->
+  <script>
+  window.__encLS = (function(){
+    let _key = null;
+    async function deriveKey(pw){
+      const enc = new TextEncoder();
+      const km = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveKey']);
+      return crypto.subtle.deriveKey({name:'PBKDF2', salt: enc.encode('armor-salt-v1'), iterations:100000, hash:'SHA-256'}, km, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+    }
+    return {
+      init: async function(pw){_key = await deriveKey(pw);},
+      set: async function(k, v){
+        if(!_key) throw new Error('Not initialized');
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, _key, new TextEncoder().encode(v));
+        const combined = new Uint8Array(iv.length + ct.byteLength);
+        combined.set(iv);
+        combined.set(new Uint8Array(ct), iv.length);
+        localStorage.setItem(k, btoa(String.fromCharCode(...combined)));
+      },
+      get: async function(k){
+        if(!_key) throw new Error('Not initialized');
+        const stored = localStorage.getItem(k);
+        if(!stored) return null;
+        const data = Uint8Array.from(atob(stored), c => c.charCodeAt(0));
+        const iv = data.slice(0, 12);
+        const ct = data.slice(12);
+        const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv}, _key, ct);
+        return new TextDecoder().decode(pt);
+      }
+    };
+  })();
+  <\/script>`;
+
+const SESSION_TIMEOUT = `
+  <!-- Session Timeout -->
+  <script>
+  (function(){
+    const TIMEOUT = 1800000; // 30 min
+    let lastActivity = Date.now();
+    ['click','keydown','scroll','mousemove','touchstart'].forEach(ev => document.addEventListener(ev, () => {lastActivity = Date.now();}, {passive:true}));
+    setInterval(() => {
+      if(Date.now() - lastActivity > TIMEOUT){
+        if(window.__audit) window.__audit('session_timeout');
+        alert('⏰ פג תוקף הסשן בגלל חוסר פעילות. הדף יטען מחדש.');
+        sessionStorage.clear();
+        location.reload();
+      }
+    }, 30000);
+  })();
+  <\/script>`;
+
+const CLIPBOARD_CLEAR = `
+  <!-- Auto-clear clipboard -->
+  <script>
+  window.__safeCopy = function(text, clearAfterMs){
+    navigator.clipboard.writeText(text).then(() => {
+      setTimeout(() => {navigator.clipboard.writeText(' ').catch(()=>{});}, clearAfterMs || 30000);
+    });
+  };
+  <\/script>`;
+
+function buildPasswordGate(hash, salt){
+  return `
+  <!-- Password Gate -->
+  <script>
+  (async function(){
+    const HASH = '${hash}';
+    const SALT = '${salt}';
+    const KEY = 'pw_auth_' + location.pathname;
+    async function h(pw){
+      const enc = new TextEncoder();
+      const s = Uint8Array.from(atob(SALT), c=>c.charCodeAt(0));
+      const km = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits']);
+      const b = await crypto.subtle.deriveBits({name:'PBKDF2', salt:s, iterations:100000, hash:'SHA-256'}, km, 256);
+      return btoa(String.fromCharCode(...new Uint8Array(b)));
+    }
+    if(sessionStorage.getItem(KEY) === HASH){
+      if(window.__encLS){try{await window.__encLS.init(sessionStorage.getItem('_pw'));}catch(e){}}
       return;
     }
-    setTimeout(()=>{btn.textContent='🚀 בחר קובץ ופרסם';btn.disabled=false;btn.style.background='';st.textContent='';st.innerHTML='';prog.style.display='none';pb.style.width='0%';input.value='';},10000);
-  }catch(e){
-    btn.textContent='❌ שגיאה';btn.disabled=false;st.textContent=e.message;st.className='card-status err';
-    toast('❌ '+e.message,true);
-    setTimeout(()=>{btn.textContent='🚀 בחר קובץ ופרסם';prog.style.display='none';pb.style.width='0%';},3000);
-  }
-}
-
-async function createAndDeploy(){
-  const name=document.getElementById('new-name').value.trim();
-  const repo=document.getElementById('new-repo').value.trim();
-  const owner=document.getElementById('new-owner').value.trim();
-  const file=document.getElementById('new-file').files[0];
-  const token=getToken();
-  if(!name||!repo){toast('⚠️ נא למלא שם ושם ריפו',true);return;}
-  if(!file){toast('⚠️ נא לבחור קובץ HTML',true);return;}
-  if(!token){toast('⚠️ נא להכניס Token קודם',true);return;}
-  const btn=document.getElementById('btn-create');
-  const prog=document.getElementById('new-prog'),pb=document.getElementById('new-progbar'),step=document.getElementById('new-step');
-  btn.disabled=true;prog.style.display='block';
-  try{
-    step.textContent='📄 קורא קובץ...';pb.style.width='10%';
-    const content=await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsText(file);});
-    const encoded=btoa(unescape(encodeURIComponent(content)));
-    step.textContent='🏗️ יוצר ריפו...';pb.style.width='25%';
-    const cr=await (await fetch('https://api.github.com/user/repos',{method:'POST',
-      headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
-      body:JSON.stringify({name:repo,private:false,auto_init:false})})).json();
-    const exists=cr.message?.toLowerCase().includes('already exist');
-    if(cr.errors&&!exists)throw new Error(cr.message);
-    if(!exists)await new Promise(r=>setTimeout(r,1500));
-    step.textContent='⬆️ מעלה קובץ...';pb.style.width='55%';
-    const apiUrl=`https://api.github.com/repos/${owner}/${repo}/contents/index.html`;
-    const chk=await (await fetch(apiUrl,{headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}})).json();
-    const body={message:'Initial deploy',content:encoded};if(chk.sha)body.sha=chk.sha;
-    const up=await (await fetch(apiUrl,{method:'PUT',headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)})).json();
-    if(!up.content)throw new Error(up.message||'שגיאה בהעלאה');
-    step.textContent='🌐 מפעיל Pages...';pb.style.width='85%';
-    await enablePages(owner,repo,token);
-    pb.style.width='100%';step.textContent='';
-    const sites=getSites();sites.push({id:'site_'+Date.now(),name,repo,owner});saveSites(sites);
-    ['new-name','new-repo'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('new-file-lbl').textContent='';document.getElementById('new-file').value='';
-    document.getElementById('add-form').classList.remove('show');
-    btn.disabled=false;prog.style.display='none';pb.style.width='0%';
-    renderSites();toast('✅ '+repo+' נוצר! יהיה זמין תוך דקה');
-  }catch(e){
-    step.textContent='❌ '+e.message;btn.disabled=false;toast('❌ '+e.message,true);
-    setTimeout(()=>{step.textContent='';prog.style.display='none';pb.style.width='0%';},4000);
-  }
-}
-
-function toggleAddForm(){document.getElementById('add-form').classList.toggle('show');}
-
-// העתקת קישור של אתר ללוח — עם fallback לדפדפנים ישנים
-async function copyLink(id,url){
-  const btn=document.getElementById('copy-'+id);
-  const original=btn.textContent;
-  try{
-    // שיטה מודרנית — navigator.clipboard (דורש HTTPS)
-    if(navigator.clipboard&&window.isSecureContext){
-      await navigator.clipboard.writeText(url);
-    }else{
-      // fallback ידני — עובד בכל דפדפן
-      const ta=document.createElement('textarea');
-      ta.value=url;ta.style.position='fixed';ta.style.left='-9999px';ta.style.top='0';
-      document.body.appendChild(ta);ta.focus();ta.select();
-      const ok=document.execCommand('copy');
-      document.body.removeChild(ta);
-      if(!ok)throw new Error('fallback failed');
+    document.documentElement.style.visibility = 'hidden';
+    let tries = 0;
+    while(tries < 5){
+      const pw = prompt('🔒 הכנס סיסמת גישה:');
+      if(pw === null){document.body.innerHTML='<div style="padding:40px;text-align:center;color:#999;font-family:sans-serif">🔒 גישה נדחתה</div>';document.documentElement.style.visibility='';return;}
+      if(await h(pw) === HASH){
+        sessionStorage.setItem(KEY, HASH);
+        sessionStorage.setItem('_pw', pw);
+        if(window.__encLS){try{await window.__encLS.init(pw);}catch(e){}}
+        document.documentElement.style.visibility = '';
+        if(window.__audit) window.__audit('password_gate_passed');
+        return;
+      }
+      tries++;
+      if(window.__audit) window.__audit('password_gate_failed', tries);
     }
-    // משוב ויזואלי
-    btn.textContent='✅';btn.classList.add('done');
-    toast('📋 הקישור הועתק!');
-    setTimeout(()=>{btn.textContent=original;btn.classList.remove('done');},1500);
-  }catch(e){
-    toast('❌ לא הצלחתי להעתיק',true);
-  }
+    document.body.innerHTML='<div style="padding:40px;text-align:center;color:#f55;font-family:sans-serif">🚫 יותר מדי ניסיונות כושלים</div>';
+    document.documentElement.style.visibility='';
+  })();
+  <\/script>`;
 }
-function moveSite(id,dir){
-  const sites=getSites();
-  const i=sites.findIndex(s=>s.id===id);
-  const j=i+dir;
-  if(j<0||j>=sites.length)return;
-  [sites[i],sites[j]]=[sites[j],sites[i]];
-  saveSites(sites);renderSites();
+
+function buildFirebaseAuth(apiKey, dbUrl, path, inviteCode, withBiometric, withSMS2FA, smsCountry, smsExpire){
+  return `
+  <!-- Firebase Auth Gate with SMS 2FA -->
+  ${withSMS2FA ? '<script src="https://www.google.com/recaptcha/api.js?render=explicit"><\/script>' : ''}
+  <style>
+  #__auth_overlay{position:fixed;inset:0;background:#0a0805;z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;font-family:-apple-system,sans-serif;direction:rtl}
+  #__auth_box{max-width:400px;width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:20px}
+  #__auth_box h2{color:#fbab20;text-align:center;margin:0 0 14px;font-size:20px}
+  #__auth_box input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#fff;padding:12px;font-size:14px;margin-bottom:10px;font-family:inherit;box-sizing:border-box}
+  #__auth_box button{width:100%;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;padding:14px;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;margin-top:6px;font-family:inherit}
+  #__auth_box .tab{display:flex;gap:4px;margin-bottom:14px;background:rgba(0,0,0,0.25);padding:3px;border-radius:10px}
+  #__auth_box .tab button{background:transparent;padding:10px;font-size:13px;font-weight:700}
+  #__auth_box .tab button.active{background:rgba(251,171,32,0.2);color:#fbab20}
+  #__auth_err{color:#fca5a5;font-size:13px;text-align:center;margin-top:8px;min-height:18px}
+  #__auth_ok{color:#6ee7b7;font-size:13px;text-align:center;margin-top:8px}
+  #__auth_bio{background:linear-gradient(135deg,#7c3aed,#5b21b6)!important;margin-top:10px}
+  #__sms_wrap{display:none;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.1)}
+  #__sms_wrap.show{display:block}
+  #__sms_info{color:#fcd34d;font-size:13px;text-align:center;margin-bottom:10px}
+  #__recaptcha{margin:10px 0;display:flex;justify-content:center}
+  </style>
+  <script>
+  (function(){
+    const FB_API = '${apiKey}';
+    const FB_DB = '${dbUrl}';
+    const APP_PATH = '${path}';
+    const INVITE_CODE = ${JSON.stringify(inviteCode || '')};
+    const WITH_BIO = ${withBiometric ? 'true' : 'false'};
+    const WITH_SMS = ${withSMS2FA ? 'true' : 'false'};
+    const SMS_COUNTRY = '${smsCountry || '+972'}';
+    const SMS_EXPIRE_MIN = ${smsExpire || 5};
+    const AUTH_KEY = 'armor_auth_token_' + APP_PATH;
+    const PHONE_KEY = 'armor_phone_' + APP_PATH;
+    
+    // Check if already authenticated
+    try{
+      const saved = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null');
+      if(saved && saved.exp > Date.now()){
+        if(window.__audit) window.__audit('auto_login', saved.email);
+        return;
+      }
+    }catch(e){}
+    
+    document.documentElement.style.visibility = 'hidden';
+    
+    let pendingLogin = null; // {email, pw, idToken, ...}
+    let smsSessionInfo = null;
+    let recaptchaWidget = null;
+    
+    function show(){
+      const ov = document.createElement('div');
+      ov.id = '__auth_overlay';
+      let tabs = '<button type="button" class="active" data-t="login">כניסה</button><button type="button" data-t="signup">הרשמה</button><button type="button" data-t="reset">שכחתי</button>';
+      let html = '<div id="__auth_box"><h2>🔒 כניסה מאובטחת</h2><div class="tab">' + tabs + '</div>' +
+        '<div id="__tab_login"><input type="email" id="__em" placeholder="email" autocomplete="email"><input type="password" id="__pw" placeholder="סיסמה" autocomplete="current-password"><button type="button" id="__doLogin">כניסה</button>' +
+        (WITH_BIO ? '<button type="button" id="__auth_bio">👆 כניסה עם טביעת אצבע</button>' : '') +
+        '</div>' +
+        '<div id="__tab_signup" style="display:none"><input type="email" id="__em2" placeholder="email"><input type="password" id="__pw2" placeholder="סיסמה (8+ תווים, אותיות+מספרים)" autocomplete="new-password">' +
+        (WITH_SMS ? '<input type="tel" id="__phone2" placeholder="מספר טלפון (0501234567)">' : '') +
+        (INVITE_CODE ? '<input type="text" id="__inv" placeholder="קוד הזמנה">' : '') +
+        '<button type="button" id="__doSignup">הירשם</button></div>' +
+        '<div id="__tab_reset" style="display:none"><input type="email" id="__em3" placeholder="email"><button type="button" id="__doReset">שלח קישור איפוס</button></div>' +
+        (WITH_SMS ? '<div id="__sms_wrap"><div id="__sms_info">📱 שולח SMS...</div><div id="__recaptcha"></div><input type="text" id="__sms_code" placeholder="קוד SMS (6 ספרות)" inputmode="numeric" maxlength="6"><button type="button" id="__verifySms">אמת קוד</button><button type="button" id="__resendSms" style="background:linear-gradient(135deg,#6b7280,#4b5563);margin-top:4px">📲 שלח SMS מחדש</button></div>' : '') +
+        '<div id="__auth_err"></div><div id="__auth_ok"></div></div>';
+      ov.innerHTML = html;
+      document.body.appendChild(ov);
+      document.documentElement.style.visibility = '';
+      
+      function showTab(name){
+        ['login','signup','reset'].forEach(t => {
+          document.getElementById('__tab_' + t).style.display = t === name ? '' : 'none';
+        });
+        document.querySelectorAll('#__auth_overlay .tab button').forEach(b => {
+          b.classList.toggle('active', b.dataset.t === name);
+        });
+        if(WITH_SMS) document.getElementById('__sms_wrap').classList.remove('show');
+      }
+      document.querySelectorAll('#__auth_overlay .tab button').forEach(b => {
+        b.onclick = () => showTab(b.dataset.t);
+      });
+      
+      const errEl = document.getElementById('__auth_err');
+      const okEl = document.getElementById('__auth_ok');
+      const setErr = m => {errEl.textContent = m; okEl.textContent='';};
+      const setOk = m => {okEl.textContent = m; errEl.textContent='';};
+      
+      function normalizePhone(phone){
+        phone = phone.replace(/[\\s\\-\\(\\)]/g, '');
+        if(phone.startsWith('+')) return phone;
+        if(phone.startsWith('0')) return SMS_COUNTRY + phone.substring(1);
+        return SMS_COUNTRY + phone;
+      }
+      
+      async function sendSMS(phone){
+        if(!window.grecaptcha){
+          throw new Error('reCAPTCHA לא נטען. רענן את העמוד.');
+        }
+        return new Promise((resolve, reject) => {
+          try{
+            // Render invisible recaptcha
+            if(recaptchaWidget === null){
+              recaptchaWidget = grecaptcha.render('__recaptcha', {
+                sitekey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI', // Firebase public test key
+                size: 'invisible',
+                callback: async (token) => {
+                  try{
+                    const r = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:sendVerificationCode?key=' + FB_API, {
+                      method:'POST', headers:{'Content-Type':'application/json'},
+                      body: JSON.stringify({phoneNumber: phone, recaptchaToken: token})
+                    });
+                    const d = await r.json();
+                    if(!r.ok) throw new Error(d.error?.message || 'SMS failed');
+                    resolve(d.sessionInfo);
+                  }catch(e){reject(e);}
+                }
+              });
+            }
+            grecaptcha.execute(recaptchaWidget);
+          }catch(e){reject(e);}
+        });
+      }
+      
+      async function verifySMS(sessionInfo, code, idToken){
+        const r = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPhoneNumber?key=' + FB_API, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({sessionInfo, code, idToken})
+        });
+        const d = await r.json();
+        if(!r.ok) throw new Error(d.error?.message || 'קוד SMS שגוי');
+        return d;
+      }
+      
+      async function getUserPhone(idToken){
+        try{
+          // Fetch user's stored phone from Firebase RTDB
+          const r = await fetch(FB_DB + '/' + APP_PATH + '/phones.json?auth=' + encodeURIComponent(idToken));
+          if(!r.ok) return null;
+          return await r.json();
+        }catch(e){return null;}
+      }
+      
+      async function completeLogin(email, uid, idToken, refreshToken, expiresIn){
+        localStorage.setItem(AUTH_KEY, JSON.stringify({token: idToken, refresh: refreshToken, email, uid, exp: Date.now() + parseInt(expiresIn)*1000}));
+        if(window.__rateLimit) window.__rateLimit.success();
+        if(window.__audit) window.__audit('login_success', email);
+        ov.remove();
+        setTimeout(() => location.reload(), 100);
+      }
+      
+      async function doLogin(email, pw){
+        if(window.__rateLimit){try{window.__rateLimit.check();}catch(e){setErr(e.message); return;}}
+        try{
+          const r = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' + FB_API, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({email, password: pw, returnSecureToken: true})
+          });
+          const d = await r.json();
+          if(!r.ok) throw new Error(d.error?.message || 'שגיאה');
+          
+          if(WITH_SMS){
+            // Get user's phone from DB
+            const phones = await getUserPhone(d.idToken);
+            const userPhone = phones && phones[d.localId] ? phones[d.localId] : null;
+            if(!userPhone){
+              // User registered before SMS was required - log them in but warn
+              setErr('⚠️ אין מספר טלפון רשום. התחברות ללא 2FA (פעם אחת)');
+              setTimeout(() => completeLogin(d.email, d.localId, d.idToken, d.refreshToken, d.expiresIn), 1500);
+              return;
+            }
+            
+            // SMS step required
+            pendingLogin = {email: d.email, uid: d.localId, idToken: d.idToken, refreshToken: d.refreshToken, expiresIn: d.expiresIn, phone: userPhone};
+            setOk('✅ הסיסמה נכונה, שולח SMS...');
+            try{
+              smsSessionInfo = await sendSMS(userPhone);
+              document.getElementById('__sms_wrap').classList.add('show');
+              document.getElementById('__sms_info').textContent = '📱 נשלח SMS ל-' + userPhone.replace(/(.{4})(.+)(.{4})/,'$1****$3');
+              setOk('');
+            }catch(e){setErr('❌ שליחת SMS נכשלה: ' + e.message);}
+            return;
+          }
+          
+          if(window.__encLS){try{await window.__encLS.init(pw);}catch(e){}}
+          await completeLogin(d.email, d.localId, d.idToken, d.refreshToken, d.expiresIn);
+        }catch(e){
+          if(window.__rateLimit) window.__rateLimit.fail();
+          if(window.__audit) window.__audit('login_fail', email);
+          setErr('❌ ' + e.message);
+        }
+      }
+      
+      document.getElementById('__doLogin').onclick = () => {
+        const em = document.getElementById('__em').value.trim();
+        const pw = document.getElementById('__pw').value;
+        if(!em || !pw){setErr('מלא הכל'); return;}
+        doLogin(em, pw);
+      };
+      
+      if(WITH_SMS){
+        document.getElementById('__verifySms').onclick = async () => {
+          const code = document.getElementById('__sms_code').value.trim();
+          if(!code || code.length !== 6){setErr('❌ קוד SMS: 6 ספרות'); return;}
+          if(!smsSessionInfo || !pendingLogin){setErr('❌ שגיאה: אין sessionInfo. נסה להיכנס שוב'); return;}
+          try{
+            await verifySMS(smsSessionInfo, code, pendingLogin.idToken);
+            if(window.__audit) window.__audit('sms_verified', pendingLogin.email);
+            await completeLogin(pendingLogin.email, pendingLogin.uid, pendingLogin.idToken, pendingLogin.refreshToken, pendingLogin.expiresIn);
+          }catch(e){setErr('❌ ' + e.message);}
+        };
+        document.getElementById('__resendSms').onclick = async () => {
+          if(!pendingLogin) return;
+          setOk('⏳ שולח שוב...');
+          try{
+            smsSessionInfo = await sendSMS(pendingLogin.phone);
+            setOk('✅ נשלח SMS חדש');
+          }catch(e){setErr('❌ ' + e.message);}
+        };
+      }
+      
+      document.getElementById('__doSignup').onclick = async () => {
+        const em = document.getElementById('__em2').value.trim();
+        const pw = document.getElementById('__pw2').value;
+        const inv = INVITE_CODE ? document.getElementById('__inv').value.trim() : '';
+        const phone = WITH_SMS ? document.getElementById('__phone2').value.trim() : '';
+        if(!em || !pw){setErr('מלא הכל'); return;}
+        if(WITH_SMS && !phone){setErr('❌ חובה מספר טלפון'); return;}
+        if(INVITE_CODE && inv !== INVITE_CODE){setErr('❌ קוד הזמנה שגוי'); return;}
+        if(pw.length < 8){setErr('❌ סיסמה: 8+ תווים'); return;}
+        if(!/[a-zA-Z]/.test(pw) || !/[0-9]/.test(pw)){setErr('❌ סיסמה: אותיות + מספרים'); return;}
+        try{
+          const r = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + FB_API, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({email: em, password: pw, returnSecureToken: true})
+          });
+          const d = await r.json();
+          if(!r.ok) throw new Error(d.error?.message || 'שגיאה');
+          
+          if(WITH_SMS){
+            // Save phone number in Firebase DB
+            const normalizedPhone = normalizePhone(phone);
+            try{
+              await fetch(FB_DB + '/' + APP_PATH + '/phones/' + d.localId + '.json?auth=' + encodeURIComponent(d.idToken), {
+                method:'PUT', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify(normalizedPhone)
+              });
+            }catch(e){console.error('Failed to save phone:', e);}
+            if(window.__audit) window.__audit('signup_with_sms', em);
+          }else{
+            if(window.__audit) window.__audit('signup', em);
+          }
+          setOk('✅ נרשמת! מתחבר...');
+          setTimeout(() => doLogin(em, pw), 800);
+        }catch(e){setErr('❌ ' + e.message);}
+      };
+      
+      document.getElementById('__doReset').onclick = async () => {
+        const em = document.getElementById('__em3').value.trim();
+        if(!em){setErr('הכנס email'); return;}
+        try{
+          const r = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=' + FB_API, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({requestType:'PASSWORD_RESET', email: em})
+          });
+          const d = await r.json();
+          if(!r.ok) throw new Error(d.error?.message || 'שגיאה');
+          if(window.__audit) window.__audit('reset_sent', em);
+          setOk('✅ מייל נשלח! בדוק את תיבת הדואר');
+        }catch(e){setErr('❌ ' + e.message);}
+      };
+      
+      if(WITH_BIO && navigator.credentials && window.PublicKeyCredential){
+        const bioBtn = document.getElementById('__auth_bio');
+        const bioData = localStorage.getItem('armor_bio_' + APP_PATH);
+        if(!bioData) bioBtn.style.display = 'none';
+        else bioBtn.onclick = async () => {
+          try{
+            const info = JSON.parse(bioData);
+            const chal = crypto.getRandomValues(new Uint8Array(32));
+            const cred = await navigator.credentials.get({
+              publicKey: {
+                challenge: chal,
+                allowCredentials: [{id: Uint8Array.from(atob(info.id), c => c.charCodeAt(0)), type:'public-key'}],
+                timeout: 60000,
+                userVerification: 'required'
+              }
+            });
+            if(cred) await doLogin(info.email, info.pw);
+          }catch(e){setErr('❌ ביומטרי נכשל: ' + e.message);}
+        };
+      }
+    }
+    
+    if(document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', show);
+    }else{show();}
+  })();
+  <\/script>`;
 }
-let _delId='';
-function confirmDelete(id,name){
-  _delId=id;
-  document.getElementById('del-modal-name').textContent=name;
-  document.getElementById('del-modal').style.display='flex';
+
+async function hashPw(pw){
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const enc = new TextEncoder();
+  const km = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits']);
+  const b = await crypto.subtle.deriveBits({name:'PBKDF2', salt, iterations:100000, hash:'SHA-256'}, km, 256);
+  return {
+    hash: btoa(String.fromCharCode(...new Uint8Array(b))),
+    salt: btoa(String.fromCharCode(...salt))
+  };
 }
-function closeDelModal(){document.getElementById('del-modal').style.display='none';_delId='';}
-function doDelete(){
-  if(!_delId)return;
-  const deleted=getDeletedIds();
-  if(!deleted.includes(_delId))deleted.push(_delId);
-  localStorage.setItem('deleted_ids',JSON.stringify(deleted));
-  saveSites(getSites().filter(s=>s.id!==_delId));
-  closeDelModal();renderSites();
-  toast('🗑 נמחק');
-}
-function downloadEdit(){
-  const content=document.getElementById('edit-textarea').value;
-  if(!content)return;
-  const a=document.createElement('a');
-  a.href='data:text/html;charset=utf-8,'+encodeURIComponent(content);
-  a.download=(editCtx.repo||'site')+'.html';
-  a.click();
-}
-let editCtx={repo:'',owner:'',sha:''};
-async function openEditor(repo,owner,name){
-  const token=getToken();if(!token){toast('⚠️ נא להכניס Token קודם',true);return;}
-  document.getElementById('edit-title').textContent='✏️ '+name;
-  document.getElementById('edit-textarea').value='';
-  document.getElementById('edit-overlay').classList.remove('hidden');
-  const st=document.getElementById('edit-status');st.textContent='⏳ טוען קובץ...';st.style.color='#5eead4';
+
+async function armor(){
+  if(!loadedContent){l('❌ לא נטען קובץ','err'); return;}
+  goBtn.disabled = true;
+  clearLog();
+  
+  const opts = {
+    headers: document.getElementById('opt-headers').checked,
+    csp: document.getElementById('opt-csp').checked,
+    antidebug: document.getElementById('opt-antidebug').checked,
+    password: document.getElementById('opt-password').checked,
+    firebaseAuth: document.getElementById('opt-firebase-auth').checked,
+    invite: document.getElementById('opt-invite').checked,
+    biometric: document.getElementById('opt-biometric').checked,
+    sms2fa: document.getElementById('opt-sms2fa').checked,
+    rate: document.getElementById('opt-rate').checked,
+    audit: document.getElementById('opt-audit').checked,
+    fingerprint: document.getElementById('opt-fingerprint').checked,
+    encryptLS: document.getElementById('opt-encrypt-ls').checked,
+    sessionTimeout: document.getElementById('opt-session-timeout').checked,
+    clipboardClear: document.getElementById('opt-clipboard-clear').checked
+  };
+  
   try{
-    const r=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/index.html`,
-      {headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}});
-    const d=await r.json();
-    if(!d.content)throw new Error(d.message||'קובץ לא נמצא');
-    editCtx={repo,owner,sha:d.sha};
-    document.getElementById('edit-textarea').value=decodeURIComponent(escape(atob(d.content.replace(/\n/g,''))));
-    st.textContent='';
-  }catch(e){st.textContent='❌ '+e.message;st.style.color='#f87171';}
-}
-function closeEditor(){
-  document.getElementById('edit-overlay').classList.add('hidden');
-  document.getElementById('edit-textarea').value='';
-  document.getElementById('edit-status').textContent='';
-  const btn=document.getElementById('edit-save-btn');
-  btn.textContent='💾 שמור ופרסם';btn.disabled=false;btn.style.background='';
-  editCtx={repo:'',owner:'',sha:''};
-}
-async function saveEdit(){
-  const token=getToken();if(!token){toast('⚠️ אין Token',true);return;}
-  const content=document.getElementById('edit-textarea').value;
-  const st=document.getElementById('edit-status'),btn=document.getElementById('edit-save-btn');
-  btn.disabled=true;btn.textContent='⏳ שומר...';st.textContent='מעלה...';st.style.color='#5eead4';
-  try{
-    const encoded=btoa(unescape(encodeURIComponent(content)));
-    const body={message:'Edit via deploy panel',content:encoded,sha:editCtx.sha};
-    const r=await fetch(`https://api.github.com/repos/${editCtx.owner}/${editCtx.repo}/contents/index.html`,
-      {method:'PUT',headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
-    const d=await r.json();
-    if(!d.content)throw new Error(d.message||'שגיאה');
-    st.textContent='✅ נשמר! מתעדכן תוך דקה';btn.textContent='✅ נשמר!';btn.style.background='#059669';
-    toast('✅ '+editCtx.repo+' נשמר!');
-    setTimeout(()=>closeEditor(),2500);
+    let content = loadedContent;
+    const sizeBefore = content.length;
+    const hebrewBefore = (content.match(/[\u0590-\u05FF]/g)||[]).length;
+    
+    l('═══ ניתוח הקובץ ═══', 'big');
+    l('📏 ' + (sizeBefore/1024).toFixed(0) + ' KB, ' + hebrewBefore.toLocaleString() + ' תווים עברית', 'info');
+    const apis = detectAPIs(content);
+    const detected = Object.keys(apis).filter(k => apis[k]);
+    l('📡 APIs זוהו: ' + (detected.join(', ') || 'ללא'), 'info');
+    
+    const headCloseIdx = content.search(/<\/head>/i);
+    if(headCloseIdx < 0){l('❌ לא נמצא </head>', 'err'); goBtn.disabled = false; return;}
+    
+    let inject = '\n';
+    
+    l('\n═══ בניית שכבות ═══', 'big');
+    
+    // 1. Security headers
+    if(opts.headers && !content.includes('X-Content-Type-Options')){
+      inject += HEADERS + '\n';
+      l('✅ Security Headers', 'ok');
+    }
+    
+    // 2. CSP (needs firebase domain if firebase auth)
+    if(opts.csp && !content.includes('Content-Security-Policy')){
+      inject += buildCSP(apis, content, opts.firebaseAuth) + '\n';
+      l('✅ CSP מותאם', 'ok');
+    }
+    
+    // 3-8. Scripts (order matters: some depend on others)
+    if(opts.rate){inject += RATE_LIMIT; l('✅ Rate Limit', 'ok');}
+    if(opts.audit){inject += AUDIT; l('✅ Audit Log', 'ok');}
+    if(opts.fingerprint){inject += FINGERPRINT; l('✅ Device Fingerprint', 'ok');}
+    if(opts.encryptLS){inject += ENCRYPT_LS; l('✅ Encrypted localStorage', 'ok');}
+    if(opts.clipboardClear){inject += CLIPBOARD_CLEAR; l('✅ Clipboard Auto-Clear', 'ok');}
+    if(opts.sessionTimeout){inject += SESSION_TIMEOUT; l('✅ Session Timeout (30 min)', 'ok');}
+    if(opts.antidebug){inject += ANTIDEBUG; l('✅ Anti-debug', 'ok');}
+    
+    // Password gate (needs to come after encryptLS to init it)
+    if(opts.password){
+      const pw = document.getElementById('cfg-password-val').value;
+      if(!pw || pw.length < 8){l('❌ סיסמת הגנה: 8+ תווים', 'err'); goBtn.disabled = false; return;}
+      const {hash, salt} = await hashPw(pw);
+      inject += buildPasswordGate(hash, salt);
+      l('✅ Password Gate (PBKDF2)', 'ok');
+    }
+    
+    // Firebase Auth (last, so all other modules are loaded)
+    if(opts.firebaseAuth){
+      const apiKey = document.getElementById('cfg-fb-api').value.trim();
+      const dbUrl = document.getElementById('cfg-fb-db').value.trim();
+      const path = document.getElementById('cfg-fb-path').value.trim();
+      if(!apiKey || !dbUrl || !path){l('❌ חסרים פרטי Firebase', 'err'); goBtn.disabled = false; return;}
+      const inv = opts.invite ? document.getElementById('cfg-invite-val').value.trim() : '';
+      if(opts.invite && !inv){l('❌ קוד הזמנה חייב ערך', 'err'); goBtn.disabled = false; return;}
+      let smsCountry = '+972';
+      let smsExpire = 5;
+      if(opts.sms2fa){
+        smsCountry = document.getElementById('cfg-sms-country').value.trim() || '+972';
+        smsExpire = parseInt(document.getElementById('cfg-sms-expire').value) || 5;
+      }
+      inject += buildFirebaseAuth(apiKey, dbUrl, path, inv, opts.biometric, opts.sms2fa, smsCountry, smsExpire);
+      const extras = [];
+      if(opts.invite) extras.push('Invite Code');
+      if(opts.biometric) extras.push('Biometric');
+      if(opts.sms2fa) extras.push('SMS 2FA');
+      l('✅ Firebase Auth Gate' + (extras.length ? ' + ' + extras.join(' + ') : ''), 'ok');
+    }
+    
+    // Inject before </head>
+    content = content.substring(0, headCloseIdx) + inject + content.substring(headCloseIdx);
+    
+    const sizeAfter = content.length;
+    const hebrewAfter = (content.match(/[\u0590-\u05FF]/g)||[]).length;
+    
+    l('\n═══ בדיקת שלמות ═══', 'big');
+    l('📏 ' + (sizeAfter/1024).toFixed(0) + ' KB (+' + ((sizeAfter-sizeBefore)/1024).toFixed(1) + ' KB)', 'info');
+    // Only fail if Hebrew was LOST (decreased). Adding new Hebrew is fine.
+    if(hebrewAfter < hebrewBefore){
+      l('❌ עברית קיימת נשברה! ('+hebrewBefore+' → '+hebrewAfter+')', 'err');
+      goBtn.disabled = false;
+      return;
+    }
+    if(hebrewAfter > hebrewBefore){
+      l('✅ עברית קיימת שלמה + עברית חדשה נוספה (' + hebrewBefore + ' → ' + hebrewAfter + ')', 'ok');
+    }else{
+      l('✅ עברית שלמה (' + hebrewAfter + ' תווים)', 'ok');
+    }
+    
+    const blob = new Blob([content], {type:'text/html;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    dlBtn.href = url;
+    const name = loadedFile.name.replace(/\.html?$/i, '');
+    dlBtn.download = name + '-armored-max.html';
+    dlBtn.textContent = '⬇️ הורד ' + name + '-armored-max.html';
+    dlBtn.classList.add('show');
+    
+    l('\n═══ 🎉 הושלם! ═══', 'big');
+    const enabled = Object.entries(opts).filter(([k,v])=>v).length;
+    l('🛡️ ' + enabled + ' שכבות אבטחה פעילות', 'ok');
+    if(opts.password || opts.firebaseAuth){
+      l('\n⚠️ שמור את פרטי הגישה!', 'warn');
+      if(opts.password) l('  🔑 סיסמת הגנה שהזנת', 'warn');
+      if(opts.firebaseAuth){
+        l('  📧 email להרשמה/כניסה', 'warn');
+        if(opts.invite) l('  🎟️ קוד הזמנה: ' + document.getElementById('cfg-invite-val').value, 'warn');
+      }
+    }
+    
+    goBtn.textContent = '🔄 שרוין קובץ אחר';
+    goBtn.disabled = false;
   }catch(e){
-    st.textContent='❌ '+e.message;st.style.color='#f87171';
-    btn.disabled=false;btn.textContent='💾 שמור ופרסם';btn.style.background='';
-    toast('❌ '+e.message,true);
+    l('\n❌ שגיאה: '+e.message, 'err');
+    console.error(e);
+    goBtn.disabled = false;
   }
 }
 
-window.onload=()=>{showTokenStatus();renderSites();};
+// Initialize
+updateOptUI();
 </script>
 </body>
 </html>
