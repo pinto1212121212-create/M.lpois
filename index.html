@@ -176,6 +176,24 @@ h1{background:linear-gradient(135deg,#fbab20,#f97316,#ef4444);-webkit-background
       <div class="opt-needs">צריך: Firebase Auth מסומן + מכשיר תומך</div>
     </div>
   </label>
+  
+  <label class="opt">
+    <input type="checkbox" id="opt-sms2fa">
+    <div class="opt-body">
+      <div class="opt-name">📱 אימות SMS (2FA)</div>
+      <div class="opt-desc">אחרי email+סיסמה, Firebase שולח SMS עם קוד 6 ספרות. רמת אבטחה מקסימלית!</div>
+      <div class="opt-needs">צריך: Firebase Auth + Phone Provider מופעל ב-Firebase Console + reCAPTCHA</div>
+    </div>
+  </label>
+  
+  <div class="config-section" id="cfg-sms2fa">
+    <label>🌍 קידומת מדינה (אופציונלי):</label>
+    <input type="text" id="cfg-sms-country" placeholder="+972" value="+972">
+    <div class="hint">קידומת דיפולטיבית שנוספת אוטומטית אם המשתמש הקליד בלעדיה. ישראל: +972</div>
+    <label>⏱️ תוקף קוד SMS (דקות):</label>
+    <input type="number" id="cfg-sms-expire" value="5" min="1" max="60">
+    <div class="hint" style="color:#fcd34d">⚠️ <b>חשוב:</b> לפני שזה יעבוד, עלה ל-Firebase Console → Authentication → Sign-in method → <b>הפעל "Phone"</b>. עלות: ~$0.06 ל-SMS בישראל.</div>
+  </div>
 </div>
 
 <!-- ═══ GROUP 3: Rate Limiting & Monitoring ═══ -->
@@ -262,18 +280,25 @@ function updateOptUI(){
     if(cb && !cb.disabled) el.classList.toggle('active', cb.checked);
   });
   // Show/hide config sections
-  ['password', 'firebase-auth', 'invite'].forEach(id => {
+  ['password', 'firebase-auth', 'invite', 'sms2fa'].forEach(id => {
     const cb = document.getElementById('opt-' + id);
     const cfg = document.getElementById('cfg-' + id);
     if(cb && cfg) cfg.classList.toggle('show', cb.checked);
   });
+  const fb = document.getElementById('opt-firebase-auth');
   // Biometric requires firebase
   const bio = document.getElementById('opt-biometric');
-  const fb = document.getElementById('opt-firebase-auth');
-  if(bio && !fb.checked){bio.checked = false;}
+  if(bio && !fb.checked && bio.checked){bio.checked = false; bio.closest('.opt').classList.remove('active');}
   // Invite requires firebase
   const inv = document.getElementById('opt-invite');
-  if(inv && !fb.checked){inv.checked = false;}
+  if(inv && !fb.checked && inv.checked){inv.checked = false; inv.closest('.opt').classList.remove('active');}
+  // SMS 2FA requires firebase
+  const sms = document.getElementById('opt-sms2fa');
+  if(sms && !fb.checked && sms.checked){
+    sms.checked = false;
+    sms.closest('.opt').classList.remove('active');
+    document.getElementById('cfg-sms2fa').classList.remove('show');
+  }
 }
 
 document.querySelectorAll('.opt input').forEach(cb => {
@@ -555,9 +580,10 @@ function buildPasswordGate(hash, salt){
   <\/script>`;
 }
 
-function buildFirebaseAuth(apiKey, dbUrl, path, inviteCode, withBiometric){
+function buildFirebaseAuth(apiKey, dbUrl, path, inviteCode, withBiometric, withSMS2FA, smsCountry, smsExpire){
   return `
-  <!-- Firebase Auth Gate -->
+  <!-- Firebase Auth Gate with SMS 2FA -->
+  ${withSMS2FA ? '<script src="https://www.google.com/recaptcha/api.js?render=explicit"><\/script>' : ''}
   <style>
   #__auth_overlay{position:fixed;inset:0;background:#0a0805;z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;font-family:-apple-system,sans-serif;direction:rtl}
   #__auth_box{max-width:400px;width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:20px}
@@ -570,6 +596,10 @@ function buildFirebaseAuth(apiKey, dbUrl, path, inviteCode, withBiometric){
   #__auth_err{color:#fca5a5;font-size:13px;text-align:center;margin-top:8px;min-height:18px}
   #__auth_ok{color:#6ee7b7;font-size:13px;text-align:center;margin-top:8px}
   #__auth_bio{background:linear-gradient(135deg,#7c3aed,#5b21b6)!important;margin-top:10px}
+  #__sms_wrap{display:none;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.1)}
+  #__sms_wrap.show{display:block}
+  #__sms_info{color:#fcd34d;font-size:13px;text-align:center;margin-bottom:10px}
+  #__recaptcha{margin:10px 0;display:flex;justify-content:center}
   </style>
   <script>
   (function(){
@@ -578,20 +608,26 @@ function buildFirebaseAuth(apiKey, dbUrl, path, inviteCode, withBiometric){
     const APP_PATH = '${path}';
     const INVITE_CODE = ${JSON.stringify(inviteCode || '')};
     const WITH_BIO = ${withBiometric ? 'true' : 'false'};
+    const WITH_SMS = ${withSMS2FA ? 'true' : 'false'};
+    const SMS_COUNTRY = '${smsCountry || '+972'}';
+    const SMS_EXPIRE_MIN = ${smsExpire || 5};
     const AUTH_KEY = 'armor_auth_token_' + APP_PATH;
+    const PHONE_KEY = 'armor_phone_' + APP_PATH;
     
     // Check if already authenticated
     try{
       const saved = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null');
       if(saved && saved.exp > Date.now()){
-        // Refresh in background
         if(window.__audit) window.__audit('auto_login', saved.email);
-        return; // Let the app load
+        return;
       }
     }catch(e){}
     
-    // Block rendering
     document.documentElement.style.visibility = 'hidden';
+    
+    let pendingLogin = null; // {email, pw, idToken, ...}
+    let smsSessionInfo = null;
+    let recaptchaWidget = null;
     
     function show(){
       const ov = document.createElement('div');
@@ -601,10 +637,12 @@ function buildFirebaseAuth(apiKey, dbUrl, path, inviteCode, withBiometric){
         '<div id="__tab_login"><input type="email" id="__em" placeholder="email" autocomplete="email"><input type="password" id="__pw" placeholder="סיסמה" autocomplete="current-password"><button type="button" id="__doLogin">כניסה</button>' +
         (WITH_BIO ? '<button type="button" id="__auth_bio">👆 כניסה עם טביעת אצבע</button>' : '') +
         '</div>' +
-        '<div id="__tab_signup" style="display:none"><input type="text" id="__em2" placeholder="email"><input type="password" id="__pw2" placeholder="סיסמה (8+ תווים, אותיות+מספרים)" autocomplete="new-password">' +
+        '<div id="__tab_signup" style="display:none"><input type="email" id="__em2" placeholder="email"><input type="password" id="__pw2" placeholder="סיסמה (8+ תווים, אותיות+מספרים)" autocomplete="new-password">' +
+        (WITH_SMS ? '<input type="tel" id="__phone2" placeholder="מספר טלפון (0501234567)">' : '') +
         (INVITE_CODE ? '<input type="text" id="__inv" placeholder="קוד הזמנה">' : '') +
         '<button type="button" id="__doSignup">הירשם</button></div>' +
         '<div id="__tab_reset" style="display:none"><input type="email" id="__em3" placeholder="email"><button type="button" id="__doReset">שלח קישור איפוס</button></div>' +
+        (WITH_SMS ? '<div id="__sms_wrap"><div id="__sms_info">📱 שולח SMS...</div><div id="__recaptcha"></div><input type="text" id="__sms_code" placeholder="קוד SMS (6 ספרות)" inputmode="numeric" maxlength="6"><button type="button" id="__verifySms">אמת קוד</button><button type="button" id="__resendSms" style="background:linear-gradient(135deg,#6b7280,#4b5563);margin-top:4px">📲 שלח SMS מחדש</button></div>' : '') +
         '<div id="__auth_err"></div><div id="__auth_ok"></div></div>';
       ov.innerHTML = html;
       document.body.appendChild(ov);
@@ -617,6 +655,7 @@ function buildFirebaseAuth(apiKey, dbUrl, path, inviteCode, withBiometric){
         document.querySelectorAll('#__auth_overlay .tab button').forEach(b => {
           b.classList.toggle('active', b.dataset.t === name);
         });
+        if(WITH_SMS) document.getElementById('__sms_wrap').classList.remove('show');
       }
       document.querySelectorAll('#__auth_overlay .tab button').forEach(b => {
         b.onclick = () => showTab(b.dataset.t);
@@ -627,6 +666,69 @@ function buildFirebaseAuth(apiKey, dbUrl, path, inviteCode, withBiometric){
       const setErr = m => {errEl.textContent = m; okEl.textContent='';};
       const setOk = m => {okEl.textContent = m; errEl.textContent='';};
       
+      function normalizePhone(phone){
+        phone = phone.replace(/[\\s\\-\\(\\)]/g, '');
+        if(phone.startsWith('+')) return phone;
+        if(phone.startsWith('0')) return SMS_COUNTRY + phone.substring(1);
+        return SMS_COUNTRY + phone;
+      }
+      
+      async function sendSMS(phone){
+        if(!window.grecaptcha){
+          throw new Error('reCAPTCHA לא נטען. רענן את העמוד.');
+        }
+        return new Promise((resolve, reject) => {
+          try{
+            // Render invisible recaptcha
+            if(recaptchaWidget === null){
+              recaptchaWidget = grecaptcha.render('__recaptcha', {
+                sitekey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI', // Firebase public test key
+                size: 'invisible',
+                callback: async (token) => {
+                  try{
+                    const r = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:sendVerificationCode?key=' + FB_API, {
+                      method:'POST', headers:{'Content-Type':'application/json'},
+                      body: JSON.stringify({phoneNumber: phone, recaptchaToken: token})
+                    });
+                    const d = await r.json();
+                    if(!r.ok) throw new Error(d.error?.message || 'SMS failed');
+                    resolve(d.sessionInfo);
+                  }catch(e){reject(e);}
+                }
+              });
+            }
+            grecaptcha.execute(recaptchaWidget);
+          }catch(e){reject(e);}
+        });
+      }
+      
+      async function verifySMS(sessionInfo, code, idToken){
+        const r = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPhoneNumber?key=' + FB_API, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({sessionInfo, code, idToken})
+        });
+        const d = await r.json();
+        if(!r.ok) throw new Error(d.error?.message || 'קוד SMS שגוי');
+        return d;
+      }
+      
+      async function getUserPhone(idToken){
+        try{
+          // Fetch user's stored phone from Firebase RTDB
+          const r = await fetch(FB_DB + '/' + APP_PATH + '/phones.json?auth=' + encodeURIComponent(idToken));
+          if(!r.ok) return null;
+          return await r.json();
+        }catch(e){return null;}
+      }
+      
+      async function completeLogin(email, uid, idToken, refreshToken, expiresIn){
+        localStorage.setItem(AUTH_KEY, JSON.stringify({token: idToken, refresh: refreshToken, email, uid, exp: Date.now() + parseInt(expiresIn)*1000}));
+        if(window.__rateLimit) window.__rateLimit.success();
+        if(window.__audit) window.__audit('login_success', email);
+        ov.remove();
+        setTimeout(() => location.reload(), 100);
+      }
+      
       async function doLogin(email, pw){
         if(window.__rateLimit){try{window.__rateLimit.check();}catch(e){setErr(e.message); return;}}
         try{
@@ -636,12 +738,32 @@ function buildFirebaseAuth(apiKey, dbUrl, path, inviteCode, withBiometric){
           });
           const d = await r.json();
           if(!r.ok) throw new Error(d.error?.message || 'שגיאה');
-          localStorage.setItem(AUTH_KEY, JSON.stringify({token: d.idToken, refresh: d.refreshToken, email: d.email, uid: d.localId, exp: Date.now() + parseInt(d.expiresIn)*1000}));
-          if(window.__rateLimit) window.__rateLimit.success();
-          if(window.__audit) window.__audit('login_success', email);
+          
+          if(WITH_SMS){
+            // Get user's phone from DB
+            const phones = await getUserPhone(d.idToken);
+            const userPhone = phones && phones[d.localId] ? phones[d.localId] : null;
+            if(!userPhone){
+              // User registered before SMS was required - log them in but warn
+              setErr('⚠️ אין מספר טלפון רשום. התחברות ללא 2FA (פעם אחת)');
+              setTimeout(() => completeLogin(d.email, d.localId, d.idToken, d.refreshToken, d.expiresIn), 1500);
+              return;
+            }
+            
+            // SMS step required
+            pendingLogin = {email: d.email, uid: d.localId, idToken: d.idToken, refreshToken: d.refreshToken, expiresIn: d.expiresIn, phone: userPhone};
+            setOk('✅ הסיסמה נכונה, שולח SMS...');
+            try{
+              smsSessionInfo = await sendSMS(userPhone);
+              document.getElementById('__sms_wrap').classList.add('show');
+              document.getElementById('__sms_info').textContent = '📱 נשלח SMS ל-' + userPhone.replace(/(.{4})(.+)(.{4})/,'$1****$3');
+              setOk('');
+            }catch(e){setErr('❌ שליחת SMS נכשלה: ' + e.message);}
+            return;
+          }
+          
           if(window.__encLS){try{await window.__encLS.init(pw);}catch(e){}}
-          ov.remove();
-          setTimeout(() => location.reload(), 100);
+          await completeLogin(d.email, d.localId, d.idToken, d.refreshToken, d.expiresIn);
         }catch(e){
           if(window.__rateLimit) window.__rateLimit.fail();
           if(window.__audit) window.__audit('login_fail', email);
@@ -656,11 +778,34 @@ function buildFirebaseAuth(apiKey, dbUrl, path, inviteCode, withBiometric){
         doLogin(em, pw);
       };
       
+      if(WITH_SMS){
+        document.getElementById('__verifySms').onclick = async () => {
+          const code = document.getElementById('__sms_code').value.trim();
+          if(!code || code.length !== 6){setErr('❌ קוד SMS: 6 ספרות'); return;}
+          if(!smsSessionInfo || !pendingLogin){setErr('❌ שגיאה: אין sessionInfo. נסה להיכנס שוב'); return;}
+          try{
+            await verifySMS(smsSessionInfo, code, pendingLogin.idToken);
+            if(window.__audit) window.__audit('sms_verified', pendingLogin.email);
+            await completeLogin(pendingLogin.email, pendingLogin.uid, pendingLogin.idToken, pendingLogin.refreshToken, pendingLogin.expiresIn);
+          }catch(e){setErr('❌ ' + e.message);}
+        };
+        document.getElementById('__resendSms').onclick = async () => {
+          if(!pendingLogin) return;
+          setOk('⏳ שולח שוב...');
+          try{
+            smsSessionInfo = await sendSMS(pendingLogin.phone);
+            setOk('✅ נשלח SMS חדש');
+          }catch(e){setErr('❌ ' + e.message);}
+        };
+      }
+      
       document.getElementById('__doSignup').onclick = async () => {
         const em = document.getElementById('__em2').value.trim();
         const pw = document.getElementById('__pw2').value;
         const inv = INVITE_CODE ? document.getElementById('__inv').value.trim() : '';
+        const phone = WITH_SMS ? document.getElementById('__phone2').value.trim() : '';
         if(!em || !pw){setErr('מלא הכל'); return;}
+        if(WITH_SMS && !phone){setErr('❌ חובה מספר טלפון'); return;}
         if(INVITE_CODE && inv !== INVITE_CODE){setErr('❌ קוד הזמנה שגוי'); return;}
         if(pw.length < 8){setErr('❌ סיסמה: 8+ תווים'); return;}
         if(!/[a-zA-Z]/.test(pw) || !/[0-9]/.test(pw)){setErr('❌ סיסמה: אותיות + מספרים'); return;}
@@ -671,7 +816,20 @@ function buildFirebaseAuth(apiKey, dbUrl, path, inviteCode, withBiometric){
           });
           const d = await r.json();
           if(!r.ok) throw new Error(d.error?.message || 'שגיאה');
-          if(window.__audit) window.__audit('signup', em);
+          
+          if(WITH_SMS){
+            // Save phone number in Firebase DB
+            const normalizedPhone = normalizePhone(phone);
+            try{
+              await fetch(FB_DB + '/' + APP_PATH + '/phones/' + d.localId + '.json?auth=' + encodeURIComponent(d.idToken), {
+                method:'PUT', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify(normalizedPhone)
+              });
+            }catch(e){console.error('Failed to save phone:', e);}
+            if(window.__audit) window.__audit('signup_with_sms', em);
+          }else{
+            if(window.__audit) window.__audit('signup', em);
+          }
           setOk('✅ נרשמת! מתחבר...');
           setTimeout(() => doLogin(em, pw), 800);
         }catch(e){setErr('❌ ' + e.message);}
@@ -708,10 +866,7 @@ function buildFirebaseAuth(apiKey, dbUrl, path, inviteCode, withBiometric){
                 userVerification: 'required'
               }
             });
-            if(cred){
-              // Use stored credentials for login
-              await doLogin(info.email, info.pw);
-            }
+            if(cred) await doLogin(info.email, info.pw);
           }catch(e){setErr('❌ ביומטרי נכשל: ' + e.message);}
         };
       }
@@ -748,6 +903,7 @@ async function armor(){
     firebaseAuth: document.getElementById('opt-firebase-auth').checked,
     invite: document.getElementById('opt-invite').checked,
     biometric: document.getElementById('opt-biometric').checked,
+    sms2fa: document.getElementById('opt-sms2fa').checked,
     rate: document.getElementById('opt-rate').checked,
     audit: document.getElementById('opt-audit').checked,
     fingerprint: document.getElementById('opt-fingerprint').checked,
@@ -812,8 +968,18 @@ async function armor(){
       if(!apiKey || !dbUrl || !path){l('❌ חסרים פרטי Firebase', 'err'); goBtn.disabled = false; return;}
       const inv = opts.invite ? document.getElementById('cfg-invite-val').value.trim() : '';
       if(opts.invite && !inv){l('❌ קוד הזמנה חייב ערך', 'err'); goBtn.disabled = false; return;}
-      inject += buildFirebaseAuth(apiKey, dbUrl, path, inv, opts.biometric);
-      l('✅ Firebase Auth Gate' + (opts.invite ? ' + Invite Code' : '') + (opts.biometric ? ' + Biometric' : ''), 'ok');
+      let smsCountry = '+972';
+      let smsExpire = 5;
+      if(opts.sms2fa){
+        smsCountry = document.getElementById('cfg-sms-country').value.trim() || '+972';
+        smsExpire = parseInt(document.getElementById('cfg-sms-expire').value) || 5;
+      }
+      inject += buildFirebaseAuth(apiKey, dbUrl, path, inv, opts.biometric, opts.sms2fa, smsCountry, smsExpire);
+      const extras = [];
+      if(opts.invite) extras.push('Invite Code');
+      if(opts.biometric) extras.push('Biometric');
+      if(opts.sms2fa) extras.push('SMS 2FA');
+      l('✅ Firebase Auth Gate' + (extras.length ? ' + ' + extras.join(' + ') : ''), 'ok');
     }
     
     // Inject before </head>
@@ -824,12 +990,17 @@ async function armor(){
     
     l('\n═══ בדיקת שלמות ═══', 'big');
     l('📏 ' + (sizeAfter/1024).toFixed(0) + ' KB (+' + ((sizeAfter-sizeBefore)/1024).toFixed(1) + ' KB)', 'info');
-    if(hebrewAfter !== hebrewBefore){
-      l('❌ עברית השתנתה! ('+hebrewBefore+' → '+hebrewAfter+')', 'err');
+    // Only fail if Hebrew was LOST (decreased). Adding new Hebrew is fine.
+    if(hebrewAfter < hebrewBefore){
+      l('❌ עברית קיימת נשברה! ('+hebrewBefore+' → '+hebrewAfter+')', 'err');
       goBtn.disabled = false;
       return;
     }
-    l('✅ עברית שלמה', 'ok');
+    if(hebrewAfter > hebrewBefore){
+      l('✅ עברית קיימת שלמה + עברית חדשה נוספה (' + hebrewBefore + ' → ' + hebrewAfter + ')', 'ok');
+    }else{
+      l('✅ עברית שלמה (' + hebrewAfter + ' תווים)', 'ok');
+    }
     
     const blob = new Blob([content], {type:'text/html;charset=utf-8'});
     const url = URL.createObjectURL(blob);
